@@ -1,0 +1,60 @@
+ 
+<h1>Giỏ hàng người dùng</h1>
+<form class="row" action="/admin/carts" method="get" style="margin:10px 0; gap:8px">
+  <input type="text" name="q" placeholder="Tìm theo tên hoặc email..." value="<%= typeof q !== 'undefined' ? q : '' %>" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+  <button class="btn">Tìm</button>
+  <% if (typeof q !== 'undefined' && q) { %>
+    <a class="btn" href="/admin/carts">Xóa bộ lọc</a>
+  <% } %>
+</form>
+
+<% if (!carts.length) { %>
+  <p class="muted">Chưa phát hiện giỏ hàng nào trong sessions.</p>
+<% } else { %>
+  <p class="muted">Tìm thấy <%= carts.length %> giỏ hàng có sản phẩm</p>
+<% } %>
+<div class="grid">
+  <% carts.forEach(c => { %>
+    <div class="card"><div class="p">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3><%= c.user.name %> (<%= c.user.email %>)</h3>
+        <span class="muted" style="font-size:12px">SID: <%= c.sid.substring(0,8) %>...</span>
+      </div>
+      <div class="muted" style="margin-bottom:8px">
+        Tổng <%= c.cart.totalQty || 0 %> sản phẩm • <%= ((c.cart.totalCents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %>
+      </div>
+      <table>
+        <thead><tr><th>Sản phẩm</th><th class="center">SL</th><th class="right">Đơn giá</th><th class="right">Thành tiền</th><th></th></tr></thead>
+        <tbody>
+          <% Object.values(c.cart.items || {}).forEach(({product, qty}) => { %>
+            <tr>
+              <td><%= product.title %></td>
+              <td class="center"><%= qty %></td>
+              <td class="right"><%= (product.price_cents/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></td>
+              <td class="right"><%= ((product.price_cents*qty)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></td>
+              <td>
+                <div class="row" style="gap:4px">
+                  <form action="/admin/carts/<%= c.sid %>/item/<%= product.id %>/update?_csrf=<%= csrfToken %>" method="post" style="display:inline">
+                    <input name="qty" type="number" min="0" max="<%= product.stock || 999 %>" value="<%= qty %>" style="width:60px;padding:4px;border-radius:4px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+                    <button class="btn" type="submit">Cập nhật</button>
+                  </form>
+                  <form action="/admin/carts/<%= c.sid %>/item/<%= product.id %>/remove?_csrf=<%= csrfToken %>" method="post" style="display:inline">
+                    <button class="btn">Xóa</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <div class="row" style="justify-content:space-between;margin-top:8px">
+        <strong>Tổng: <span class="price"><%= ((c.cart.totalCents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span></strong>
+        <form action="/admin/carts/<%= c.sid %>/clear?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Xóa toàn bộ giỏ hàng người dùng này?')">
+          <button class="btn">Xóa giỏ</button>
+        </form>
+      </div>
+    </div></div>
+  <% }) %>
+</div>
+
+

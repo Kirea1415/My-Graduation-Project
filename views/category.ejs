@@ -1,0 +1,336 @@
+<div class="category-page">
+  <div class="category-header">
+    <h1>📁 <%= category.name %></h1>
+    <p class="category-subtitle">
+      <span><%= products.length %> sản phẩm</span>
+      <a href="/categories" class="back-link">← Quay lại danh mục</a>
+    </p>
+  </div>
+  
+  <% if (!products || products.length === 0) { %>
+    <div class="empty-products">
+      <div class="empty-icon">📦</div>
+      <h3>Danh mục trống</h3>
+      <p class="muted">Chưa có sản phẩm nào trong danh mục này.</p>
+      <a href="/" class="btn primary">Khám phá sản phẩm khác</a>
+    </div>
+  <% } else { %>
+    <div class="products-grid">
+      <% products.forEach(p => { %>
+        <div class="product-card">
+          <div class="product-image">
+            <img src="<%= p.image || '/img/placeholder.jpg' %>" alt="<%= p.title %>" loading="lazy" decoding="async">
+            <div class="product-overlay">
+              <a href="/product/<%= p.slug %>" class="btn quick-view">Xem chi tiết</a>
+            </div>
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">
+              <a href="/product/<%= p.slug %>"><%= p.title %></a>
+            </h3>
+            
+            <p class="product-description">
+              <%= (p.description || '').slice(0, 80) %><%= (p.description && p.description.length > 80) ? '...' : '' %>
+            </p>
+            
+            <div class="product-stock">
+              <% if (p.stock > 0) { %>
+                <span class="in-stock">✅ Còn hàng (<%= p.stock %>)</span>
+              <% } else { %>
+                <span class="out-of-stock">❌ Hết hàng</span>
+              <% } %>
+            </div>
+            
+            <div class="product-footer">
+              <div class="product-price">
+                <span class="price"><%= ((p.price_cents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+              </div>
+              <div class="product-actions">
+                <% if (currentUser) { %>
+                  <form action="/wishlist/add/<%= p.id %>?_csrf=<%= csrfToken %>" method="post" class="wishlist-form">
+                    <button class="btn wishlist-btn" type="submit" title="Thêm vào danh sách yêu thích">
+                      <span>❤️</span>
+                    </button>
+                  </form>
+                <% } %>
+                
+                <% if (p.stock > 0) { %>
+                  <form action="/cart/add/<%= p.id %>?_csrf=<%= csrfToken %>" method="post">
+                    <button class="btn primary" type="submit">
+                      <span>🛒</span>
+                      Thêm giỏ
+                    </button>
+                  </form>
+                <% } else { %>
+                  <button class="btn disabled" disabled>
+                    <span>❌</span>
+                    Hết hàng
+                  </button>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<style>
+.category-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.category-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.category-header h1 {
+  margin: 0 0 12px 0;
+  font-size: 32px;
+  color: var(--fg);
+}
+
+.category-subtitle {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.back-link {
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.back-link:hover {
+  color: var(--green-700);
+  transform: translateX(-4px);
+}
+
+.empty-products {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+}
+
+.empty-products h3 {
+  margin: 0 0 12px 0;
+  color: var(--fg);
+  font-size: 24px;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.product-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-color: var(--green);
+}
+
+.product-image {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
+.product-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.product-card:hover .product-overlay {
+  opacity: 1;
+}
+
+.quick-view {
+  background: var(--green);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.quick-view:hover {
+  background: var(--green-700);
+  transform: scale(1.05);
+}
+
+.product-info {
+  padding: 20px;
+}
+
+.product-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.product-title a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.product-title a:hover {
+  color: var(--green);
+}
+
+.product-description {
+  margin: 0 0 12px 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.product-stock {
+  margin-bottom: 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.in-stock {
+  color: #10b981;
+}
+
+.out-of-stock {
+  color: #ef4444;
+}
+
+.product-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-price {
+  flex: 1;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.product-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.wishlist-form {
+  margin: 0;
+}
+
+.wishlist-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 10px;
+  min-width: 40px;
+  transition: all 0.2s;
+}
+
+.wishlist-btn:hover {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: white;
+  transform: scale(1.1);
+}
+
+.product-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #6b7280;
+  border-color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .category-subtitle {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+  }
+  
+  .product-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .product-actions {
+    justify-content: space-between;
+  }
+  
+  .product-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+</style>
+
+

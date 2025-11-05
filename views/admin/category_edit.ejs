@@ -1,0 +1,17 @@
+ 
+<h1>Sửa danh mục</h1>
+<form action="/admin/categories/<%= category.id %>/edit?_csrf=<%= csrfToken %>" method="post" class="card" style="max-width:520px">
+  <div class="p">
+    <div style="margin-bottom:10px">
+      <label>Tên</label>
+      <input name="name" value="<%= category.name %>" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+    </div>
+    <div style="margin-bottom:10px">
+      <label>Slug</label>
+      <input name="slug" value="<%= category.slug %>" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+    </div>
+    <button class="btn primary" type="submit">Lưu</button>
+  </div>
+</form>
+
+

@@ -1,0 +1,659 @@
+<div class="admin-products">
+  <h1>📦 Quản lý sản phẩm</h1>
+  
+  <div class="product-form-card">
+    <h2>➕ Thêm sản phẩm mới</h2>
+    <form action="/admin/products?_csrf=<%= csrfToken %>" method="post" class="product-form">
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="title">Tiêu đề sản phẩm *</label>
+          <input type="text" id="title" name="title" placeholder="Ví dụ: Windows 11 Pro Key" required />
+        </div>
+        
+        <div class="form-group">
+          <label for="slug">Slug (URL) *</label>
+          <input type="text" id="slug" name="slug" placeholder="windows-11-pro-key" required />
+          <small class="form-hint">Slug sẽ tự động được tạo từ tiêu đề nếu để trống</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="category_id">Danh mục</label>
+          <select id="category_id" name="category_id">
+            <option value="">-- Chọn danh mục --</option>
+            <% categories.forEach(c => { %>
+              <option value="<%= c.id %>"><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="price_cents">Giá (VND) *</label>
+          <input type="number" id="price_cents" name="price_cents" placeholder="399000" min="0" required />
+          <small class="form-hint">Giá tính bằng VND</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="stock">Tồn kho</label>
+          <input type="number" id="stock" name="stock" placeholder="100" min="0" value="0" />
+          <small class="form-hint">Số lượng sản phẩm có sẵn</small>
+        </div>
+        
+        <div class="form-group full-width">
+          <label for="image">URL ảnh sản phẩm</label>
+          <input type="url" id="image" name="image" placeholder="https://example.com/image.jpg" />
+          <small class="form-hint">Để trống sẽ sử dụng ảnh mặc định</small>
+        </div>
+        
+        <div class="form-group full-width">
+          <label for="description">Mô tả sản phẩm</label>
+          <textarea id="description" name="description" rows="4" placeholder="Mô tả chi tiết về sản phẩm..."></textarea>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="submit" class="btn primary large">
+          <span>➕</span>
+          Thêm sản phẩm
+        </button>
+        <button type="reset" class="btn secondary">
+          <span>🔄</span>
+          Đặt lại
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="products-list-card">
+    <h2>📋 Danh sách sản phẩm</h2>
+    <% if (!products || products.length === 0) { %>
+      <p class="muted">Chưa có sản phẩm nào. Hãy thêm sản phẩm đầu tiên!</p>
+    <% } else { %>
+      <div class="products-table-wrapper">
+        <table class="products-table">
+          <thead>
+            <tr>
+              <th>Sản phẩm</th>
+              <th>Danh mục</th>
+              <th class="right">Giá</th>
+              <th class="center">Tồn kho</th>
+              <th class="center">Nổi bật</th>
+              <th class="center">Trạng thái</th>
+              <th class="center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% products.forEach(p => { %>
+              <tr>
+                <td>
+                  <div class="product-cell">
+                    <img src="<%= p.image || '/img/placeholder.jpg' %>" alt="<%= p.title %>" class="product-thumb" loading="lazy" decoding="async" />
+                    <div class="product-info-cell">
+                      <a href="/product/<%= p.slug %>" class="product-title-link"><%= p.title %></a>
+                      <span class="product-slug">/<%= p.slug %></span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="category-badge"><%= p.category_name || '-' %></span>
+                </td>
+                <td class="right">
+                  <span class="price"><%= (p.price_cents/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+                </td>
+                <td class="center">
+                  <span class="stock-badge <%= p.stock > 0 ? 'in-stock' : 'out-of-stock' %>">
+                    <%= p.stock %>
+                  </span>
+                </td>
+                <td class="center">
+                  <button class="btn-featured <%= p.featured ? 'featured-active' : '' %>" 
+                          onclick="toggleFeatured(<%= p.id %>, '<%= csrfToken %>')" 
+                          type="button" 
+                          title="<%= p.featured ? 'Bỏ đánh dấu nổi bật' : 'Đánh dấu nổi bật' %>"
+                          data-product-id="<%= p.id %>">
+                    <%= p.featured ? '🔥' : '⚪' %>
+                  </button>
+                </td>
+                <td class="center">
+                  <span class="status-badge <%= p.active ? 'active' : 'inactive' %> status-badge-<%= p.id %>">
+                    <%= p.active ? '✅ Hiển thị' : '❌ Ẩn' %>
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn small" 
+                            onclick="toggleActive(<%= p.id %>, '<%= csrfToken %>')" 
+                            type="button"
+                            title="<%= p.active ? 'Ẩn' : 'Hiện' %>"
+                            data-product-id="<%= p.id %>">
+                      <%= p.active ? '👁️' : '👁️‍🗨️' %>
+                    </button>
+                    <a class="btn small" href="/admin/products/<%= p.id %>/edit" title="Sửa">
+                      ✏️
+                    </a>
+                    <button class="btn small danger" 
+                            onclick="deleteProduct(<%= p.id %>, '<%= csrfToken %>', '<%= p.title %>')" 
+                            type="button"
+                            title="Xóa"
+                            data-product-id="<%= p.id %>">
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<style>
+.admin-products {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.product-form-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+.product-form-card h2 {
+  margin: 0 0 24px 0;
+  font-size: 24px;
+  color: var(--fg);
+  border-bottom: 2px solid var(--green);
+  padding-bottom: 12px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--fg);
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  background: rgba(22, 163, 74, 0.05);
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.form-actions .btn.large {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.products-list-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+}
+
+.products-list-card h2 {
+  margin: 0 0 24px 0;
+  font-size: 24px;
+  color: var(--fg);
+  border-bottom: 2px solid var(--green);
+  padding-bottom: 12px;
+}
+
+.products-table-wrapper {
+  overflow-x: auto;
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.products-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--fg);
+  border-bottom: 2px solid var(--border);
+  font-size: 14px;
+}
+
+.products-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.products-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.product-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.product-info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-title-link {
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.product-title-link:hover {
+  color: var(--green);
+}
+
+.product-slug {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.stock-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stock-badge.in-stock {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.stock-badge.out-of-stock {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.status-badge.inactive {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.action-buttons .btn.small {
+  padding: 6px 10px;
+  font-size: 14px;
+  min-width: 36px;
+}
+
+.btn-featured {
+  background: transparent;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.btn-featured:hover {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: var(--green);
+  transform: scale(1.1);
+}
+
+.btn-featured.featured-active {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+  border-color: #ef4444;
+  animation: pulse-featured 2s ease-in-out infinite;
+}
+
+.btn-featured.featured-active:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.3) 100%);
+  transform: scale(1.15);
+}
+
+@keyframes pulse-featured {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+@media (max-width: 968px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .products-table-wrapper {
+    overflow-x: scroll;
+  }
+}
+</style>
+
+<script>
+// Auto-generate slug from title
+document.getElementById('title').addEventListener('input', function() {
+  const title = this.value;
+  const slugInput = document.getElementById('slug');
+  
+  if (slugInput.value === '' || slugInput.dataset.autoGenerated === 'true') {
+    const slug = title
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+    slugInput.value = slug;
+    slugInput.dataset.autoGenerated = 'true';
+  }
+});
+
+document.getElementById('slug').addEventListener('input', function() {
+  this.dataset.autoGenerated = 'false';
+});
+
+// AJAX functions for product management
+async function toggleFeatured(productId, csrfToken) {
+  const button = document.querySelector(`[data-product-id="${productId}"].btn-featured`);
+  if (!button) return;
+  
+  button.disabled = true;
+  button.style.opacity = '0.6';
+  
+  try {
+    const formData = new FormData();
+    formData.append('_csrf', csrfToken);
+    
+    const response = await fetch(`/api/admin/products/${productId}/toggle-featured`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Update button appearance
+      if (data.featured) {
+        button.classList.add('featured-active');
+        button.innerHTML = '🔥';
+        button.title = 'Bỏ đánh dấu nổi bật';
+      } else {
+        button.classList.remove('featured-active');
+        button.innerHTML = '⚪';
+        button.title = 'Đánh dấu nổi bật';
+      }
+      
+      showAdminToast(data.message, 'success');
+    } else {
+      showAdminToast(data.message || 'Có lỗi xảy ra', 'error');
+    }
+  } catch (error) {
+    console.error('Error toggling featured:', error);
+    showAdminToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+  } finally {
+    button.disabled = false;
+    button.style.opacity = '1';
+  }
+}
+
+async function toggleActive(productId, csrfToken) {
+  const button = document.querySelector(`[data-product-id="${productId}"].btn.small`);
+  const statusBadge = document.querySelector(`.status-badge-${productId}`);
+  if (!button || !statusBadge) return;
+  
+  button.disabled = true;
+  button.style.opacity = '0.6';
+  
+  try {
+    const formData = new FormData();
+    formData.append('_csrf', csrfToken);
+    
+    const response = await fetch(`/api/admin/products/${productId}/toggle`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Update status badge
+      if (data.active) {
+        statusBadge.classList.remove('inactive');
+        statusBadge.classList.add('active');
+        statusBadge.textContent = '✅ Hiển thị';
+        button.innerHTML = '👁️';
+        button.title = 'Ẩn';
+      } else {
+        statusBadge.classList.remove('active');
+        statusBadge.classList.add('inactive');
+        statusBadge.textContent = '❌ Ẩn';
+        button.innerHTML = '👁️‍🗨️';
+        button.title = 'Hiện';
+      }
+      
+      showAdminToast(data.message, 'success');
+    } else {
+      showAdminToast(data.message || 'Có lỗi xảy ra', 'error');
+    }
+  } catch (error) {
+    console.error('Error toggling active:', error);
+    showAdminToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+  } finally {
+    button.disabled = false;
+    button.style.opacity = '1';
+  }
+}
+
+async function deleteProduct(productId, csrfToken, productTitle) {
+  if (!confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${productTitle}"?`)) {
+    return;
+  }
+  
+  const button = document.querySelector(`[data-product-id="${productId}"].btn.danger`);
+  const row = button?.closest('tr');
+  
+  if (!button || !row) return;
+  
+  button.disabled = true;
+  button.style.opacity = '0.6';
+  
+  try {
+    const formData = new FormData();
+    formData.append('_csrf', csrfToken);
+    
+    const response = await fetch(`/api/admin/products/${productId}/delete`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Fade out and remove row
+      row.style.transition = 'opacity 0.3s';
+      row.style.opacity = '0';
+      setTimeout(() => {
+        row.remove();
+        // Check if table is empty
+        const tbody = document.querySelector('.products-table tbody');
+        if (tbody && tbody.children.length === 0) {
+          location.reload(); // Reload to show empty message
+        }
+      }, 300);
+      
+      showAdminToast(data.message, 'success');
+    } else {
+      showAdminToast(data.message || 'Có lỗi xảy ra', 'error');
+      button.disabled = false;
+      button.style.opacity = '1';
+    }
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    showAdminToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+    button.disabled = false;
+    button.style.opacity = '1';
+  }
+}
+
+// Toast notification for admin
+function showAdminToast(message, type = 'success') {
+  // Use existing toast function if available
+  if (typeof showToast === 'function') {
+    showToast(message, type);
+    return;
+  }
+  
+  // Fallback toast implementation
+  const toast = document.createElement('div');
+  toast.className = `admin-toast admin-toast-${type}`;
+  toast.textContent = message;
+  
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 24px;
+    background: ${type === 'success' ? 'var(--green)' : '#ef4444'};
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease-out;
+  `;
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOutRight 0.3s ease-out';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+  
+  // Add animations if not exist
+  if (!document.getElementById('admin-toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'admin-toast-styles';
+    style.textContent = `
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+</script>
+
+

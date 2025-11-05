@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    
+    <!-- SEO Meta Tags -->
+    <title><%= typeof title !== 'undefined' ? title : 'SafeKeyS - Cửa hàng Key Phần Mềm, Game Chính Hãng' %></title>
+    <meta name="description" content="<%= typeof description !== 'undefined' ? description : 'SafeKeyS - Cửa hàng chuyên cung cấp key bản quyền phần mềm, game và thẻ nạp uy tín, nhanh chóng. Giao hàng tự động trong 5 phút, hỗ trợ 24/7.' %>" />
+    <meta name="keywords" content="key phần mềm, key game, bản quyền, windows, office, steam wallet, game keys, software keys" />
+    <meta name="author" content="SafeKeyS" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="<%= typeof canonical !== 'undefined' ? canonical : '' %>" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="<%= typeof ogUrl !== 'undefined' ? ogUrl : 'http://localhost:3000' %>" />
+    <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'SafeKeyS - Cửa hàng Key Phần Mềm, Game Chính Hãng' %>" />
+    <meta property="og:description" content="<%= typeof description !== 'undefined' ? description : 'Cửa hàng chuyên cung cấp key bản quyền phần mềm, game và thẻ nạp uy tín, nhanh chóng.' %>" />
+    <meta property="og:image" content="<%= typeof ogImage !== 'undefined' ? ogImage : '/img/placeholder.jpg' %>" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="<%= typeof ogUrl !== 'undefined' ? ogUrl : 'http://localhost:3000' %>" />
+    <meta property="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'SafeKeyS' %>" />
+    <meta property="twitter:description" content="<%= typeof description !== 'undefined' ? description : 'Cửa hàng key phần mềm và game chính hãng' %>" />
+    <meta property="twitter:image" content="<%= typeof ogImage !== 'undefined' ? ogImage : '/img/placeholder.jpg' %>" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    
+    <!-- Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/style.css" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#16a34a" />
+    
+    <!-- Structured Data (JSON-LD) -->
+    <% if (typeof structuredData !== 'undefined' && structuredData) { %>
+      <script type="application/ld+json">
+        <%- JSON.stringify(structuredData) %>
+      </script>
+    <% } %>
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Bỏ qua đến nội dung chính</a>
+    <header>
+      <div class="container">
+        <!-- Hàng 1: Brand, Search, Auth + Cart -->
+        <div class="nav nav-top">
+          <a href="/" class="brand"><span class="dot"></span> SafeKeyS</a>
+        <form class="search-form search" action="/" method="get" role="search">
+          <input type="text" name="q" placeholder="Tìm kiếm sản phẩm..." value="<%= typeof q !== 'undefined' ? q : '' %>" aria-label="Tìm kiếm sản phẩm" />
+          <button type="submit" aria-label="Tìm kiếm">Tìm</button>
+        </form>
+          <div class="nav-user">
+            <% if (currentUser) { %>
+              <div class="user-actions">
+              <a href="/wishlist" class="btn wishlist-btn-header" title="Danh sách yêu thích" aria-label="Danh sách yêu thích">
+                <span aria-hidden="true">❤️</span>
+                <span class="wishlist-text">Yêu thích</span>
+              </a>
+                <a href="/orders" class="btn">Đơn hàng</a>
+                <a href="/profile" class="btn">Hồ sơ</a>
+                <form action="/logout?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn đăng xuất?')" style="margin:0">
+                  <button class="btn">Đăng xuất</button>
+                </form>
+              </div>
+            <% } else { %>
+              <div class="auth-links">
+                <a class="btn" href="/login">Đăng nhập</a>
+                <a class="btn primary" href="/register">Đăng ký</a>
+              </div>
+            <% } %>
+            
+          <a class="btn cart-btn" href="/cart" aria-label="Giỏ hàng" title="Giỏ hàng" id="cart-link">
+            <span class="cart-icon" aria-hidden="true">🛒</span>
+            <span class="cart-text">Giỏ hàng</span>
+            <% if (currentUser && typeof cart !== 'undefined' && cart.totalQty && cart.totalQty > 0) { %>
+              <span class="cart-badge" id="cart-badge" aria-label="Số lượng sản phẩm trong giỏ: <%= cart.totalQty %>"><%= cart.totalQty %></span>
+            <% } else if (currentUser) { %>
+              <span class="cart-badge" id="cart-badge" style="display: none;" aria-label="Số lượng sản phẩm trong giỏ: 0">0</span>
+            <% } %>
+          </a>
+          </div>
+        </div>
+        
+        <!-- Hàng 2: Navigation Links + Admin Menu -->
+        <div class="nav nav-bottom">
+          <div class="nav-links">
+            <a class="btn" href="/categories">Danh mục</a>
+            <a class="btn" href="/news">Tin tức</a>
+            <a class="btn" href="/payment">Thanh toán</a>
+            <a class="btn" href="/policy">Chính sách</a>
+          </div>
+          
+          <% if (currentUser) { %>
+            <div class="user-info">
+              <div class="user-greeting">
+                <% if (currentUser.avatar) { %>
+                  <img src="<%= currentUser.avatar %>" alt="<%= currentUser.name %>" class="user-avatar-small" />
+                <% } %>
+                <span class="user-name">Xin chào, <%= currentUser.name %></span>
+              </div>
+              <% if (currentUser.role === 'admin') { %>
+                <div class="admin-menu">
+                  <a href="/admin" class="btn admin">Admin</a>
+                  <a href="/admin/products" class="btn admin">Sản phẩm</a>
+                  <a href="/admin/categories" class="btn admin">Danh mục</a>
+                  <a href="/admin/news" class="btn admin">Tin tức</a>
+                  <a href="/admin/carts" class="btn admin">Giỏ hàng</a>
+                  <a href="/admin/settings" class="btn admin">Cài đặt</a>
+                </div>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </header>
+    <main id="main-content" class="container">
+      <% if (flash.success && flash.success.length) { %>
+        <div class="flash success"><%= flash.success.join('<br/>') %></div>
+      <% } %>
+      <% if (flash.error && flash.error.length) { %>
+        <div class="flash error"><%= flash.error.join('<br/>') %></div>
+      <% } %>
+      <%- body %>
+    </main>
+    <footer>
+      <div class="container row" style="justify-content:space-between;align-items:center">
+        <div>
+          © <%= new Date().getFullYear() %> SafeKeyS · 
+          <a class="muted" href="/about" style="margin-right:8px">Giới thiệu</a>
+          <a class="muted" href="/policy" style="margin-right:8px">Chính sách</a>
+          <a class="muted" href="/payment" style="margin-right:8px">Thanh toán</a>
+          <a class="muted" href="/contact" style="margin-right:12px">Liên hệ</a>
+        </div>
+        <div class="row" style="gap:10px">
+          <%
+            const socialList = settings && settings.social_media_list ? settings.social_media_list : [];
+            if (Array.isArray(socialList)) {
+              socialList.forEach(item => {
+                if (item && item.url && item.url.trim()) {
+          %>
+            <a class="btn" href="<%= item.url.trim() %>" target="_blank" rel="noopener noreferrer" aria-label="<%= item.name || 'Social' %>" title="<%= item.name || 'Social' %>" style="display:inline-flex;align-items:center;justify-content:center;padding:8px;min-width:40px;min-height:40px;">
+              <% if (item.icon && item.icon.trim()) { %>
+                <img src="<%= item.icon.trim() %>" alt="<%= item.name || 'Social' %>" style="width:24px;height:24px;object-fit:contain;border-radius:4px;display:block;" />
+              <% } %>
+            </a>
+          <%
+                }
+              });
+            }
+          %>
+        </div>
+      </div>
+    </footer>
+  </body>
+  </html>
+
+

@@ -1,0 +1,305 @@
+<div class="orders-container">
+  <h1>📦 Đơn hàng của tôi</h1>
+  
+  <% if (!orders || orders.length === 0) { %>
+    <div class="empty-orders">
+      <div class="empty-icon">📭</div>
+      <h3>Bạn chưa có đơn hàng nào</h3>
+      <p class="muted">Bắt đầu mua sắm để có đơn hàng đầu tiên!</p>
+      <a href="/" class="btn primary">Khám phá sản phẩm</a>
+    </div>
+  <% } else { %>
+    <div class="orders-grid">
+      <% orders.forEach(o => { %>
+        <div class="order-card">
+          <div class="order-header">
+            <div class="order-info">
+              <h3 class="order-number">Đơn hàng #<%= o.id %></h3>
+              <p class="order-date">
+                <span>📅</span>
+                <%= new Date(o.created_at).toLocaleString('vi-VN') %>
+              </p>
+            </div>
+            <div class="order-status">
+              <% 
+                const statusConfig = {
+                  'pending': { label: 'Chờ xử lý', color: '#f59e0b', icon: '⏳' },
+                  'processing': { label: 'Đang xử lý', color: '#3b82f6', icon: '⚙️' },
+                  'completed': { label: 'Hoàn thành', color: '#10b981', icon: '✅' },
+                  'cancelled': { label: 'Đã hủy', color: '#ef4444', icon: '❌' }
+                };
+                const status = statusConfig[o.status || 'pending'] || statusConfig['pending'];
+              %>
+              <span class="status-badge" style="background: <%= status.color %>20; color: <%= status.color %>; border: 1px solid <%= status.color %>">
+                <span><%= status.icon %></span>
+                <%= status.label %>
+              </span>
+            </div>
+          </div>
+          
+          <div class="order-items">
+            <h4 class="items-title">Sản phẩm:</h4>
+            <div class="items-list">
+              <% (itemsByOrder[o.id] || []).forEach(it => { %>
+                <div class="order-item">
+                  <div class="item-info">
+                    <strong><%= it.title %></strong>
+                    <span class="item-meta">Số lượng: <%= it.quantity %> × <%= (it.price_cents/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+                  </div>
+                  <div class="item-subtotal">
+                    <%= ((it.price_cents * it.quantity)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+          
+          <div class="order-footer">
+            <div class="order-total">
+              <strong>Tổng cộng:</strong>
+              <span class="total-price"><%= ((o.total_cents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+            </div>
+            
+            <div class="order-actions">
+              <% if (o.status === 'pending' || o.status === 'processing') { %>
+                <form action="/orders/<%= o.id %>/cancel?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+                  <button type="submit" class="btn danger small">❌ Hủy đơn</button>
+                </form>
+              <% } %>
+              <% if (currentUser && currentUser.role === 'admin') { %>
+                <form action="/admin/orders/<%= o.id %>/status?_csrf=<%= csrfToken %>" method="post" class="status-form">
+                  <select name="status" onchange="this.form.submit()" class="status-select">
+                    <option value="pending" <%= o.status === 'pending' ? 'selected' : '' %>>Chờ xử lý</option>
+                    <option value="processing" <%= o.status === 'processing' ? 'selected' : '' %>>Đang xử lý</option>
+                    <option value="completed" <%= o.status === 'completed' ? 'selected' : '' %>>Hoàn thành</option>
+                    <option value="cancelled" <%= o.status === 'cancelled' ? 'selected' : '' %>>Đã hủy</option>
+                  </select>
+                </form>
+                <form action="/admin/orders/<%= o.id %>/delete?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Xóa đơn hàng này?')">
+                  <button type="submit" class="btn danger small">🗑️ Xóa</button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<style>
+.orders-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.empty-orders {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+}
+
+.empty-orders h3 {
+  margin: 0 0 12px 0;
+  color: var(--fg);
+  font-size: 24px;
+}
+
+.orders-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.order-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.order-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: var(--green);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.order-number {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: var(--fg);
+}
+
+.order-date {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.order-items {
+  margin-bottom: 20px;
+}
+
+.items-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: var(--fg);
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-info strong {
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.item-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.item-subtotal {
+  font-weight: 600;
+  color: var(--green);
+  font-size: 14px;
+}
+
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.order-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.order-total strong {
+  color: var(--fg);
+  font-size: 16px;
+}
+
+.total-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-form {
+  margin: 0;
+}
+
+.status-select {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.btn.small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn.danger {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: white;
+}
+
+.btn.danger:hover {
+  background: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .order-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .order-footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .order-actions {
+    flex-direction: column;
+  }
+  
+  .order-actions .btn,
+  .order-actions .status-select {
+    width: 100%;
+  }
+}
+</style>
+
+

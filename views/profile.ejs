@@ -1,0 +1,384 @@
+<div class="profile-container">
+  <h1>👤 Thông tin cá nhân</h1>
+  
+  <div class="profile-header">
+    <div class="avatar-section">
+      <% if (user.avatar) { %>
+        <img src="<%= user.avatar %>" alt="<%= user.name %>" class="avatar-large" />
+      <% } else { %>
+        <div class="avatar-placeholder">
+          <span><%= (user.name || 'U').charAt(0).toUpperCase() %></span>
+        </div>
+      <% } %>
+      <div class="avatar-info">
+        <h2><%= user.name %></h2>
+        <p class="user-email"><%= user.email %></p>
+        <% if (user.google_id) { %>
+          <span class="auth-badge">🔵 Đăng nhập bằng Google</span>
+        <% } else { %>
+          <span class="auth-badge">🔒 Đăng nhập bằng mật khẩu</span>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <div class="profile-content">
+    <div class="profile-card">
+      <div class="card-header">
+        <h3>📝 Chỉnh sửa thông tin</h3>
+      </div>
+      <form action="/profile?_csrf=<%= csrfToken %>" method="post" class="profile-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Họ và tên *</label>
+            <input 
+              type="text" 
+              id="name" 
+              name="name" 
+              value="<%= user.name %>" 
+              required
+              placeholder="Nhập họ và tên"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="phone">Số điện thoại</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone" 
+              value="<%= user.phone || '' %>" 
+              placeholder="0123456789"
+              pattern="[0-9]{10,11}"
+            />
+            <small class="form-hint">Nhập số điện thoại 10-11 chữ số</small>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            value="<%= user.email %>" 
+            disabled
+            class="disabled-input"
+          />
+          <small class="form-hint">Email không thể thay đổi</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="address">Địa chỉ</label>
+          <textarea 
+            id="address" 
+            name="address" 
+            rows="3" 
+            placeholder="Nhập địa chỉ của bạn"
+          ><%= user.address || '' %></textarea>
+        </div>
+        
+        <% if (!user.google_id) { %>
+          <div class="password-section">
+            <h4>🔐 Đổi mật khẩu</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="current_password">Mật khẩu hiện tại</label>
+                <input 
+                  type="password" 
+                  id="current_password" 
+                  name="current_password" 
+                  placeholder="Nhập mật khẩu hiện tại"
+                  autocomplete="current-password"
+                />
+              </div>
+              
+              <div class="form-group">
+                <label for="new_password">Mật khẩu mới</label>
+                <input 
+                  type="password" 
+                  id="new_password" 
+                  name="new_password" 
+                  placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+                  autocomplete="new-password"
+                  minlength="6"
+                />
+              </div>
+            </div>
+            <small class="form-hint">Để trống nếu không muốn đổi mật khẩu</small>
+          </div>
+        <% } %>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn primary large">
+            <span>💾</span>
+            Lưu thay đổi
+          </button>
+          <a href="/" class="btn secondary">Hủy</a>
+        </div>
+      </form>
+    </div>
+    
+    <div class="profile-stats">
+      <div class="stat-card">
+        <div class="stat-icon">🛒</div>
+        <div class="stat-info">
+          <div class="stat-value"><%= orderCount || 0 %></div>
+          <div class="stat-label">Đơn hàng</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">❤️</div>
+        <div class="stat-info">
+          <div class="stat-value"><%= wishlistCount || 0 %></div>
+          <div class="stat-label">Yêu thích</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-info">
+          <div class="stat-value"><%= new Date(user.created_at).toLocaleDateString('vi-VN') %></div>
+          <div class="stat-label">Ngày tham gia</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.profile-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--green);
+}
+
+.avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: white;
+  border: 3px solid var(--green);
+}
+
+.avatar-info h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: var(--fg);
+}
+
+.user-email {
+  margin: 0 0 12px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.auth-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--green);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.profile-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+}
+
+.profile-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+}
+
+.card-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--border);
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--fg);
+}
+
+.profile-form {
+  margin-top: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--fg);
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  background: rgba(22, 163, 74, 0.05);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.form-group input.disabled-input {
+  background: rgba(255, 255, 255, 0.01);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.password-section {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 1px solid var(--border);
+}
+
+.password-section h4 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  color: var(--fg);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.form-actions .btn.large {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: var(--green);
+}
+
+.stat-icon {
+  font-size: 32px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 163, 74, 0.1);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@media (max-width: 968px) {
+  .profile-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

@@ -1,0 +1,371 @@
+ 
+<div class="product-detail">
+  <div class="product-gallery">
+        <img src="<%= product.image || '/img/placeholder.jpg' %>" alt="<%= product.title %>" class="product-image" loading="eager" decoding="async">
+  </div>
+  
+  <div class="product-info">
+    <h1 class="product-title"><%= product.title %></h1>
+    
+    <div class="product-price">
+      <span class="current-price"><%= ((product.price_cents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+    </div>
+    
+    <div class="product-stock">
+      <% if (product.stock > 0) { %>
+        <span class="in-stock">✅ Còn hàng (<%= product.stock %> sản phẩm)</span>
+      <% } else { %>
+        <span class="out-of-stock">❌ Hết hàng</span>
+      <% } %>
+    </div>
+    
+    <div class="product-description">
+      <h3>Mô tả sản phẩm</h3>
+      <p><%= product.description || 'Không có mô tả chi tiết.' %></p>
+    </div>
+    
+    <div class="product-actions">
+      <div class="action-buttons">
+        <% if (currentUser) { %>
+          <form action="/wishlist/add/<%= product.id %>?_csrf=<%= csrfToken %>" method="post" class="wishlist-form">
+            <button type="submit" class="btn wishlist-btn-large" title="Thêm vào danh sách yêu thích">
+              <span>❤️</span>
+              <span>Yêu thích</span>
+            </button>
+          </form>
+        <% } %>
+        
+        <% if (product.stock > 0) { %>
+          <form action="/cart/add/<%= product.id %>?_csrf=<%= csrfToken %>" method="post" class="add-to-cart-form">
+            <button type="submit" class="btn primary large">
+              <span>🛒</span>
+              Thêm vào giỏ hàng
+            </button>
+          </form>
+        <% } else { %>
+          <button class="btn large disabled" disabled>
+            <span>❌</span>
+            Hết hàng
+          </button>
+        <% } %>
+      </div>
+      
+      <% if (currentUser && currentUser.role === 'admin') { %>
+        <div class="admin-product-actions">
+          <a href="/admin/products/<%= product.id %>/edit" class="btn secondary">✏️ Sửa sản phẩm</a>
+        </div>
+      <% } %>
+    </div>
+    
+    <div class="product-features">
+      <div class="feature">
+        <span class="feature-icon">🚀</span>
+        <div class="feature-content">
+          <strong>Giao hàng nhanh</strong>
+          <span>Key được gửi trong vòng 5 phút</span>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🔒</span>
+        <div class="feature-content">
+          <strong>Bảo mật tuyệt đối</strong>
+          <span>Key chính hãng 100%</span>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">💯</span>
+        <div class="feature-content">
+          <strong>Chất lượng đảm bảo</strong>
+          <span>Hoàn tiền nếu key lỗi</span>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">📧</span>
+        <div class="feature-content">
+          <strong>Nhận key qua email</strong>
+          <span>Kiểm tra cả hộp thư spam</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="product-meta">
+      <div class="meta-item">
+        <strong>Danh mục:</strong>
+        <% if (typeof category !== 'undefined' && category) { %>
+          <a href="/category/<%= category.slug %>"><%= category.name %></a>
+        <% } else { %>
+          <span class="muted">Chưa phân loại</span>
+        <% } %>
+      </div>
+      <div class="meta-item">
+        <strong>Mã sản phẩm:</strong>
+        <span class="muted">#<%= product.id %></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.product-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.product-gallery {
+  position: sticky;
+  top: 100px;
+}
+
+.product-image {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.product-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fg);
+  line-height: 1.2;
+}
+
+.product-price {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.current-price {
+  color: var(--green);
+}
+
+.product-stock {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.in-stock {
+  color: #10b981;
+}
+
+.out-of-stock {
+  color: #ef4444;
+}
+
+.product-description h3 {
+  font-size: 18px;
+  margin: 0 0 12px 0;
+  color: var(--fg);
+}
+
+.product-description p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.product-actions {
+  margin-top: 20px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.wishlist-form {
+  margin: 0;
+  flex: 1;
+}
+
+.wishlist-btn-large {
+  background: transparent;
+  border: 2px solid var(--border);
+  color: var(--muted);
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.wishlist-btn-large:hover {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.add-to-cart-form {
+  margin: 0;
+  flex: 2;
+}
+
+.btn.large {
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.btn.large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(22, 163, 74, 0.3);
+}
+
+.btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #6b7280;
+  border-color: #6b7280;
+}
+
+.btn.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+}
+
+.btn.secondary:hover {
+  background: var(--border);
+}
+
+.admin-product-actions {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.product-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.feature:hover {
+  border-color: var(--green);
+  transform: translateY(-2px);
+}
+
+.feature-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.feature-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.feature-content strong {
+  color: var(--fg);
+  font-size: 14px;
+  display: block;
+}
+
+.feature-content span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.product-meta {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meta-item {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.meta-item strong {
+  color: var(--fg);
+}
+
+.meta-item a {
+  color: var(--green);
+  text-decoration: none;
+}
+
+.meta-item a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .product-detail {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 16px;
+  }
+  
+  .product-gallery {
+    position: static;
+  }
+  
+  .product-image {
+    height: 300px;
+  }
+  
+  .product-title {
+    font-size: 24px;
+  }
+  
+  .product-price {
+    font-size: 20px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .product-features {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+

@@ -1,0 +1,287 @@
+<div class="checkout-container">
+  <h1>Xác nhận thanh toán</h1>
+  
+  <% if (insufficient && insufficient.length) { %>
+    <div class="flash error">
+      <strong>⚠️ Lỗi tồn kho:</strong> Không đủ tồn kho cho: <%= insufficient.join(', ') %>
+    </div>
+  <% } %>
+  
+  <div class="checkout-grid">
+    <div class="checkout-left">
+      <div class="checkout-section">
+        <h2>📦 Thông tin đơn hàng</h2>
+        <div class="order-items">
+          <% Object.values(cart.items || {}).forEach(({product, qty}) => { %>
+            <div class="order-item">
+              <div class="order-item-info">
+                <h4><%= (product && product.title) ? product.title : 'Sản phẩm' %></h4>
+                <span class="order-item-qty">Số lượng: <%= qty %></span>
+              </div>
+              <div class="order-item-price">
+                <span class="price"><%= (((product && product.price_cents) ? product.price_cents : 0) * qty / 100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+      
+      <div class="checkout-section">
+        <h2>📧 Thông tin nhận key</h2>
+        <p class="muted">Key sẽ được gửi qua email: <strong><%= currentUser.email %></strong></p>
+        <p class="muted" style="font-size: 14px; margin-top: 8px;">
+          💡 Vui lòng kiểm tra cả hộp thư spam nếu không thấy email trong vài phút.
+        </p>
+      </div>
+      
+      <div class="checkout-section">
+        <h2>💳 Phương thức thanh toán</h2>
+        <div class="payment-methods">
+          <div class="payment-method active">
+            <span class="payment-icon">💳</span>
+            <span>Thanh toán khi nhận key</span>
+            <span class="payment-badge">Mô phỏng</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="checkout-right">
+      <div class="checkout-summary">
+        <h2>Tóm tắt đơn hàng</h2>
+        
+        <div class="summary-row">
+          <span>Tạm tính:</span>
+          <span><%= ((cart.totalCents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+        </div>
+        
+        <div class="summary-row">
+          <span>Phí vận chuyển:</span>
+          <span style="color: #10b981;">Miễn phí</span>
+        </div>
+        
+        <div class="summary-row discount">
+          <span>Khuyến mãi:</span>
+          <span>- 0 VND</span>
+        </div>
+        
+        <div class="summary-row total">
+          <span><strong>Tổng cộng:</strong></span>
+          <span class="price"><%= ((cart.totalCents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+        </div>
+        
+        <form action="/checkout/pay?_csrf=<%= csrfToken %>" method="post" class="checkout-form">
+          <button type="submit" class="btn primary large checkout-btn" <%= (insufficient && insufficient.length) ? 'disabled' : '' %>>
+            <span>💳</span>
+            Xác nhận thanh toán
+          </button>
+        </form>
+        
+        <div class="checkout-security">
+          <div class="security-item">
+            <span>🔒</span>
+            <span>Thanh toán an toàn</span>
+          </div>
+          <div class="security-item">
+            <span>🚀</span>
+            <span>Giao hàng nhanh</span>
+          </div>
+          <div class="security-item">
+            <span>💯</span>
+            <span>Đảm bảo chất lượng</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.checkout-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.checkout-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.checkout-section h2 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: var(--fg);
+  border-bottom: 2px solid var(--green);
+  padding-bottom: 10px;
+}
+
+.order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.order-item-info h4 {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  color: var(--fg);
+}
+
+.order-item-qty {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.order-item-price {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.2s;
+}
+
+.payment-method.active {
+  border-color: var(--green);
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.payment-icon {
+  font-size: 24px;
+}
+
+.payment-badge {
+  margin-left: auto;
+  padding: 4px 12px;
+  background: var(--green);
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.checkout-summary {
+  position: sticky;
+  top: 100px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.checkout-summary h2 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: var(--fg);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.summary-row.discount {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.summary-row.total {
+  border-bottom: none;
+  border-top: 2px solid var(--border);
+  padding-top: 12px;
+  margin-top: 12px;
+  font-size: 20px;
+}
+
+.checkout-form {
+  margin-top: 24px;
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.checkout-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(22, 163, 74, 0.3);
+}
+
+.checkout-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkout-security {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.security-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@media (max-width: 968px) {
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .checkout-summary {
+    position: static;
+  }
+}
+</style>
+
+

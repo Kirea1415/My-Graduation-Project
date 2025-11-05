@@ -1,0 +1,80 @@
+<div class="error-page">
+  <div class="error-content">
+    <div class="error-icon">⚠️</div>
+    <h1>500 - Lỗi Server</h1>
+    <p class="error-message">Đã xảy ra lỗi không mong muốn. Chúng tôi đang khắc phục vấn đề này.</p>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <details style="margin: 20px 0; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
+        <summary style="cursor: pointer; color: var(--muted);">Chi tiết lỗi (Dev only)</summary>
+        <pre style="background: var(--card); padding: 12px; border-radius: 8px; overflow-x: auto; margin-top: 12px;"><%= error %></pre>
+      </details>
+    <% } %>
+    <div class="error-actions">
+      <a href="/" class="btn primary large">Về trang chủ</a>
+      <button onclick="location.reload()" class="btn secondary">Tải lại trang</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.error-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 600px;
+}
+
+.error-icon {
+  font-size: 120px;
+  margin-bottom: 24px;
+  animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.error-content h1 {
+  margin: 0 0 16px 0;
+  font-size: 36px;
+  color: var(--fg);
+}
+
+.error-message {
+  margin: 0 0 32px 0;
+  font-size: 18px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-actions .btn.large {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .error-actions {
+    flex-direction: column;
+  }
+  
+  .error-actions .btn {
+    width: 100%;
+  }
+}
+</style>

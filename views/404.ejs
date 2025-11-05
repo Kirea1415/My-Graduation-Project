@@ -1,0 +1,71 @@
+<div class="error-page">
+  <div class="error-content">
+    <div class="error-icon">🔍</div>
+    <h1>404 - Trang không tìm thấy</h1>
+    <p class="error-message">Trang bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
+    <div class="error-actions">
+      <a href="/" class="btn primary large">Về trang chủ</a>
+      <a href="/categories" class="btn secondary">Xem danh mục</a>
+      <button onclick="history.back()" class="btn">Quay lại</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.error-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 600px;
+}
+
+.error-icon {
+  font-size: 120px;
+  margin-bottom: 24px;
+  animation: bounce 2s infinite;
+}
+
+.error-content h1 {
+  margin: 0 0 16px 0;
+  font-size: 36px;
+  color: var(--fg);
+}
+
+.error-message {
+  margin: 0 0 32px 0;
+  font-size: 18px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-actions .btn.large {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .error-actions {
+    flex-direction: column;
+  }
+  
+  .error-actions .btn {
+    width: 100%;
+  }
+}
+</style>
+
+

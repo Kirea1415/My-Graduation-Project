@@ -1,0 +1,167 @@
+<div class="static-page">
+  <h1>💳 Hướng dẫn thanh toán</h1>
+  
+  <div class="content-card">
+    <% if (typeof html !== 'undefined' && html && html.trim().length) { %>
+      <div><%- html %></div>
+    <% } else { %>
+      <div class="payment-methods-grid">
+        <div class="payment-method-card">
+          <div class="method-icon">📱</div>
+          <h3>Ví điện tử</h3>
+          <p class="muted">VNPay, MoMo, ZaloPay</p>
+          <p>Thanh toán nhanh chóng và tiện lợi. Quét QR code hoặc nhập mã đơn hàng.</p>
+          <span class="method-badge">Phổ biến</span>
+        </div>
+        
+        <div class="payment-method-card">
+          <div class="method-icon">💳</div>
+          <h3>Thẻ ngân hàng</h3>
+          <p class="muted">ATM nội địa / Thẻ quốc tế</p>
+          <p>Chấp nhận Visa, Mastercard, JCB và các thẻ ATM nội địa.</p>
+          <span class="method-badge">An toàn</span>
+        </div>
+        
+        <div class="payment-method-card">
+          <div class="method-icon">🏦</div>
+          <h3>Chuyển khoản</h3>
+          <p class="muted">Ngân hàng trực tiếp</p>
+          <p>Chuyển khoản và ghi nội dung: <strong>SafeKeyS + [Mã đơn hàng]</strong></p>
+          <span class="method-badge">Tin cậy</span>
+        </div>
+      </div>
+      
+      <div class="payment-info">
+        <h2>📝 Lưu ý quan trọng</h2>
+        <div class="info-item">
+          <span class="info-icon">⏱️</span>
+          <div>
+            <strong>Thời gian xử lý:</strong> Key sẽ được gửi tự động trong vòng 5 phút sau khi thanh toán thành công.
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">📧</span>
+          <div>
+            <strong>Nhận key:</strong> Key sẽ được gửi qua email đã đăng ký. Vui lòng kiểm tra cả hộp thư spam.
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🔒</span>
+          <div>
+            <strong>Bảo mật:</strong> Tất cả giao dịch được mã hóa SSL và bảo vệ an toàn tuyệt đối.
+          </div>
+        </div>
+      </div>
+      
+      <div class="payment-note">
+        <p class="muted">
+          <strong>Lưu ý:</strong> Trong phiên bản demo này, thanh toán được mô phỏng để phục vụ mục đích học tập. 
+          Khi triển khai thật, chúng tôi sẽ tích hợp cổng thanh toán để xử lý tự động.
+        </p>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<style>
+.payment-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.payment-method-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.payment-method-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  border-color: var(--green);
+}
+
+.method-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.payment-method-card h3 {
+  margin: 0 0 8px 0;
+  color: var(--fg);
+  font-size: 22px;
+}
+
+.payment-method-card p {
+  margin: 8px 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.method-badge {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 16px;
+  background: var(--green);
+  color: white;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.payment-info {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 2px solid var(--border);
+}
+
+.payment-info h2 {
+  margin: 0 0 24px 0;
+  color: var(--fg);
+}
+
+.info-item {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.info-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.info-item div {
+  flex: 1;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.info-item strong {
+  color: var(--fg);
+}
+
+.payment-note {
+  margin-top: 30px;
+  padding: 20px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  border-radius: 8px;
+}
+
+.payment-note p {
+  margin: 0;
+}
+</style>
+
+

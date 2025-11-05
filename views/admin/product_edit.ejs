@@ -1,0 +1,31 @@
+ 
+<h1>Sửa sản phẩm</h1>
+<form action="/admin/products/<%= product.id %>/edit?_csrf=<%= csrfToken %>" method="post" class="card">
+  <div class="p">
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <input name="title" value="<%= product.title %>" required style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+      <input name="slug" value="<%= product.slug %>" required style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+      <input name="price_cents" value="<%= product.price_cents %>" type="number" required style="width:160px;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+      <input name="image" value="<%= product.image || '' %>" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+      <select name="category_id" style="padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff">
+        <option value="">-- Danh mục --</option>
+        <% categories.forEach(c => { %>
+          <option value="<%= c.id %>" <%= product.category_id===c.id? 'selected':'' %>><%= c.name %></option>
+        <% }) %>
+      </select>
+      <input name="stock" value="<%= product.stock %>" type="number" min="0" style="width:120px;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+      <select name="active" style="padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff">
+        <option value="1" <%= product.active? 'selected':'' %>>Hiển thị</option>
+        <option value="0" <%= !product.active? 'selected':'' %>>Ẩn</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:8px;padding:10px;cursor:pointer;">
+        <input type="checkbox" name="featured" value="1" <%= product.featured? 'checked':'' %> style="width:20px;height:20px;cursor:pointer;" />
+        <span>🔥 Sản phẩm nổi bật</span>
+      </label>
+    </div>
+    <textarea name="description" rows="4" style="margin-top:8px;width:100%;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff"><%= product.description || '' %></textarea>
+    <button class="btn primary" type="submit" style="margin-top:8px">Lưu</button>
+  </div>
+</form>
+
+

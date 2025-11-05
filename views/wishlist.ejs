@@ -1,0 +1,342 @@
+<div class="wishlist-container">
+  <h1>❤️ Danh sách yêu thích</h1>
+  
+  <% if (!wishlistItems || wishlistItems.length === 0) { %>
+    <div class="empty-wishlist">
+      <div class="empty-icon">💔</div>
+      <h3>Danh sách yêu thích trống</h3>
+      <p class="muted">Bạn chưa có sản phẩm nào trong danh sách yêu thích.</p>
+      <a href="/" class="btn primary">Khám phá sản phẩm</a>
+    </div>
+  <% } else { %>
+    <div class="wishlist-grid">
+      <% wishlistItems.forEach(item => { %>
+        <div class="wishlist-item">
+          <div class="item-image">
+            <img src="<%= item.image || '/img/placeholder.jpg' %>" alt="<%= item.title %>" loading="lazy" decoding="async" />
+            <div class="item-overlay">
+              <a href="/product/<%= item.slug %>" class="btn quick-view">Xem chi tiết</a>
+            </div>
+          </div>
+          
+          <div class="item-info">
+            <h3 class="item-title">
+              <a href="/product/<%= item.slug %>"><%= item.title %></a>
+            </h3>
+            
+            <p class="item-description">
+              <%= (item.description || '').slice(0, 100) %><%= (item.description && item.description.length > 100) ? '...' : '' %>
+            </p>
+            
+            <div class="item-stock">
+              <% if (item.stock > 0) { %>
+                <span class="in-stock">✅ Còn hàng (<%= item.stock %>)</span>
+              <% } else { %>
+                <span class="out-of-stock">❌ Hết hàng</span>
+              <% } %>
+            </div>
+            
+            <div class="item-price">
+              <span class="price"><%= ((item.price_cents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+            </div>
+            
+            <div class="item-actions">
+              <% if (item.stock > 0) { %>
+                <form action="/cart/add/<%= item.id %>?_csrf=<%= csrfToken %>" method="post" class="add-to-cart-form">
+                  <button type="submit" class="btn primary">
+                    <span>🛒</span>
+                    Thêm vào giỏ
+                  </button>
+                </form>
+              <% } else { %>
+                <button class="btn disabled" disabled>
+                  <span>❌</span>
+                  Hết hàng
+                </button>
+              <% } %>
+              
+              <form action="/wishlist/remove/<%= item.id %>?_csrf=<%= csrfToken %>" method="post" class="remove-form">
+                <button type="submit" class="btn danger" title="Xóa khỏi danh sách yêu thích">
+                  <span>💔</span>
+                  Bỏ yêu thích
+                </button>
+              </form>
+            </div>
+            
+            <div class="item-meta">
+              <small class="muted">Thêm vào: <%= new Date(item.added_at).toLocaleDateString('vi-VN') %></small>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+    
+    <div class="wishlist-actions">
+      <a href="/" class="btn secondary">Tiếp tục mua sắm</a>
+      <button class="btn primary" onclick="addAllToCart()">
+        <span>🛒</span>
+        Thêm tất cả vào giỏ
+      </button>
+    </div>
+  <% } %>
+</div>
+
+<style>
+.wishlist-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.empty-wishlist {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+}
+
+.empty-wishlist h3 {
+  margin: 0 0 12px 0;
+  color: var(--fg);
+  font-size: 24px;
+}
+
+.empty-wishlist p {
+  margin: 0 0 24px 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.wishlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.wishlist-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.wishlist-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-color: var(--green);
+}
+
+.item-image {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.wishlist-item:hover .item-image img {
+  transform: scale(1.05);
+}
+
+.item-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.wishlist-item:hover .item-overlay {
+  opacity: 1;
+}
+
+.quick-view {
+  background: var(--green);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.quick-view:hover {
+  background: var(--green-700);
+  transform: scale(1.05);
+}
+
+.item-info {
+  padding: 20px;
+}
+
+.item-title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.item-title a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.item-title a:hover {
+  color: var(--green);
+}
+
+.item-description {
+  margin: 0 0 12px 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.item-stock {
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.in-stock {
+  color: #10b981;
+}
+
+.out-of-stock {
+  color: #ef4444;
+}
+
+.item-price {
+  margin-bottom: 16px;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.item-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.item-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  justify-content: center;
+}
+
+.btn.danger {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: white;
+}
+
+.btn.danger:hover {
+  background: #dc2626;
+}
+
+.item-meta {
+  text-align: center;
+}
+
+.wishlist-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.wishlist-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .wishlist-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .item-actions {
+    flex-direction: column;
+  }
+  
+  .wishlist-actions {
+    flex-direction: column;
+  }
+  
+  .wishlist-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+
+<script>
+function addAllToCart() {
+  const forms = document.querySelectorAll('.add-to-cart-form');
+  if (forms.length === 0) {
+    alert('Không có sản phẩm nào để thêm vào giỏ hàng');
+    return;
+  }
+  
+  let completed = 0;
+  const total = forms.length;
+  
+  forms.forEach((form, index) => {
+    setTimeout(() => {
+      fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(new FormData(form))
+      }).then(() => {
+        completed++;
+        if (completed === total) {
+          alert('Đã thêm tất cả sản phẩm có sẵn vào giỏ hàng!');
+          window.location.href = '/cart';
+        }
+      }).catch(() => {
+        completed++;
+      });
+    }, index * 200); // Delay 200ms between each request
+  });
+}
+</script>

@@ -1,0 +1,72 @@
+<div class="error-page">
+  <div class="error-content">
+    <div class="error-icon">🚫</div>
+    <h1>403 - Truy cập bị từ chối</h1>
+    <p class="error-message">Bạn không có quyền truy cập vào trang này. Trang này chỉ dành cho quản trị viên.</p>
+    <div class="error-actions">
+      <a href="/" class="btn primary large">Về trang chủ</a>
+      <% if (typeof currentUser === 'undefined' || !currentUser) { %>
+        <a href="/login" class="btn secondary">Đăng nhập</a>
+      <% } %>
+      <button onclick="history.back()" class="btn">Quay lại</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.error-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 600px;
+}
+
+.error-icon {
+  font-size: 120px;
+  margin-bottom: 24px;
+}
+
+.error-content h1 {
+  margin: 0 0 16px 0;
+  font-size: 36px;
+  color: var(--fg);
+}
+
+.error-message {
+  margin: 0 0 32px 0;
+  font-size: 18px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-actions .btn.large {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .error-actions {
+    flex-direction: column;
+  }
+  
+  .error-actions .btn {
+    width: 100%;
+  }
+}
+</style>
+
+

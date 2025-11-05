@@ -1,0 +1,124 @@
+<div class="static-page">
+  <h1>🌟 Giới thiệu</h1>
+  
+  <% if (typeof html !== 'undefined' && html && html.trim().length) { %>
+    <div class="content-card">
+      <div><%- html %></div>
+    </div>
+  <% } else { %>
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="about-icon">🏪</div>
+        <h2>Về SafeKeyS</h2>
+        <p>SafeKeyS là cửa hàng chuyên cung cấp key bản quyền phần mềm, game và thẻ nạp uy tín, nhanh chóng.</p>
+        <p>Chúng tôi cam kết sản phẩm chính hãng, giao hàng tự động, hỗ trợ nhiệt tình.</p>
+      </div>
+      
+      <div class="about-card">
+        <div class="about-icon">✨</div>
+        <h2>Cam kết của chúng tôi</h2>
+        <ul>
+          <li>✅ Sản phẩm chính hãng 100%</li>
+          <li>✅ Giao hàng tự động trong 5 phút</li>
+          <li>✅ Hỗ trợ 24/7</li>
+          <li>✅ Hoàn tiền nếu sản phẩm lỗi</li>
+        </ul>
+      </div>
+      
+      <div class="about-card">
+        <div class="about-icon">🎯</div>
+        <h2>Tầm nhìn</h2>
+        <p>Mang lại trải nghiệm mua sắm bản quyền dễ dàng và minh bạch nhất cho người dùng Việt Nam.</p>
+      </div>
+    </div>
+    
+    <div class="content-card">
+      <h2>Liên hệ</h2>
+      <p>Nếu bạn có thắc mắc, hãy xem mục <a href="/policy">Chính sách</a> hoặc <a href="/contact">Liên hệ</a> với chúng tôi.</p>
+    </div>
+  <% } %>
+</div>
+
+<style>
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.about-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.about-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  border-color: var(--green);
+}
+
+.about-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.about-card h2 {
+  margin: 0 0 16px 0;
+  color: var(--fg);
+  font-size: 22px;
+}
+
+.about-card p {
+  margin: 0 0 12px 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.about-card ul {
+  text-align: left;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.about-card li {
+  padding: 8px 0;
+  color: var(--muted);
+}
+
+.content-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  margin-top: 30px;
+}
+
+.content-card h2 {
+  margin: 0 0 16px 0;
+  color: var(--fg);
+  border-bottom: 2px solid var(--green);
+  padding-bottom: 10px;
+}
+
+.content-card p {
+  margin: 0 0 12px 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.content-card a {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.content-card a:hover {
+  color: var(--green-700);
+}
+</style>
+

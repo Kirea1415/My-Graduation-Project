@@ -1,0 +1,21 @@
+ 
+<h1>Đăng ký</h1>
+<form action="/register?_csrf=<%= csrfToken %>" method="post" class="card" style="max-width:420px">
+  <div class="p">
+    <div style="margin-bottom:10px">
+      <label>Họ tên</label>
+      <input name="name" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+    </div>
+    <div style="margin-bottom:10px">
+      <label>Email</label>
+      <input name="email" type="email" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+    </div>
+    <div style="margin-bottom:10px">
+      <label>Mật khẩu</label>
+      <input name="password" type="password" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+    </div>
+    <button class="btn primary full" type="submit">Đăng ký</button>
+  </div>
+</form>
+
+

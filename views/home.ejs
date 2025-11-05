@@ -1,0 +1,2762 @@
+<div class="home-layout">
+  <!-- Sidebar Categories -->
+  <aside class="categories-sidebar">
+    <div class="sidebar-header">
+      <h3>Danh mục</h3>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <span>☰</span>
+      </button>
+    </div>
+    
+    <div class="categories-list show">
+      <%
+        // Build URL with current filters but remove category
+        const allProductsParams = new URLSearchParams();
+        if (q) allProductsParams.set('q', q);
+        if (sort && sort !== 'newest') allProductsParams.set('sort', sort);
+        if (priceRange) allProductsParams.set('price', priceRange);
+        const allProductsUrl = allProductsParams.toString() ? `/?${allProductsParams.toString()}` : '/';
+      %>
+      <a href="<%= allProductsUrl %>" class="category-item <%= !category || category === '' ? 'active' : '' %>">
+        <span class="category-name">Tất cả sản phẩm</span>
+        <span class="category-arrow">→</span>
+      </a>
+      
+      <% 
+        // Debug: Check if categories exist
+        if (!categories || categories.length === 0) {
+          console.log('No categories found in template');
+        } else {
+          console.log('Categories found:', categories.length);
+        }
+      %>
+      <% if (categories && categories.length > 0) { %>
+        <% categories.forEach(cat => { %>
+          <%
+            // Build URL with current filters + selected category
+            const categoryParams = new URLSearchParams();
+            categoryParams.set('category', cat.slug);
+            if (q) categoryParams.set('q', q);
+            if (sort && sort !== 'newest') categoryParams.set('sort', sort);
+            if (priceRange) categoryParams.set('price', priceRange);
+            const categoryUrl = `/?${categoryParams.toString()}`;
+          %>
+          <a href="<%= categoryUrl %>" class="category-item <%= category === cat.slug ? 'active' : '' %>" onclick="updateCategoryDropdown('<%= cat.slug %>'); return true;">
+            <div class="category-info">
+              <span class="category-name"><%= cat.name %></span>
+              <span class="category-count">(<%= cat.product_count || 0 %>)</span>
+  </div>
+            <span class="category-arrow">→</span>
+          </a>
+        <% }) %>
+      <% } else { %>
+        <div class="empty-sidebar">
+          <p class="muted">Chưa có danh mục</p>
+        </div>
+      <% } %>
+      
+      <a href="/categories" class="category-item view-all">
+        <span class="category-name">Xem tất cả danh mục</span>
+        <span class="category-arrow">→</span>
+      </a>
+    </div>
+  </aside>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <% if (q) { %>
+      <div class="search-results">
+        <h2>Kết quả tìm kiếm cho "<%= q %>"</h2>
+        <p class="muted">Tìm thấy <%= products.length %> sản phẩm</p>
+      </div>
+    <% } else { %>
+      <!-- Combined Hero & Carousel Section -->
+      <% if (typeof featuredProducts !== 'undefined' && featuredProducts && featuredProducts.length > 0) { %>
+        <div class="hero-carousel-section">
+          <div class="hero-header">
+            <h1 class="hero-title"><%= typeof homepageSettings !== 'undefined' && homepageSettings.hero_title ? homepageSettings.hero_title : 'SafeKeyS' %></h1>
+            <p class="hero-subtitle"><%= typeof homepageSettings !== 'undefined' && homepageSettings.hero_subtitle ? homepageSettings.hero_subtitle : 'Mua key phần mềm, game nhanh chóng - Uy tín - Nhanh gọn - Hỗ trợ 24/7' %></p>
+            <div class="hero-features">
+              <%
+                const features = typeof homepageSettings !== 'undefined' && homepageSettings.hero_features 
+                  ? homepageSettings.hero_features.split('•').filter(f => f.trim())
+                  : ['Thanh toán an toàn', 'Giao key ngay lập tức', 'Bảo hành chính hãng'];
+                features.forEach((feature, index) => {
+              %>
+                <span class="hero-feature"><%= feature.trim() %></span>
+                <% if (index < features.length - 1) { %>
+                  <span class="hero-feature-divider">•</span>
+                <% } %>
+              <% }) %>
+            </div>
+          </div>
+          
+          <div class="carousel-header">
+            <h2 class="carousel-title"><%= typeof homepageSettings !== 'undefined' && homepageSettings.carousel_title ? homepageSettings.carousel_title : 'Sản phẩm nổi bật' %></h2>
+            <p class="carousel-subtitle"><%= typeof homepageSettings !== 'undefined' && homepageSettings.carousel_subtitle ? homepageSettings.carousel_subtitle : 'Khám phá những sản phẩm hot nhất hiện nay' %></p>
+          </div>
+          
+          <div class="carousel-section">
+            <button class="carousel-nav-btn prev-btn" onclick="carouselPrev()" onmouseenter="carouselPause()" onmouseleave="carouselResume()" aria-label="Trước">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+            </button>
+            
+            <div class="carousel-viewport" onmouseenter="carouselPause()" onmouseleave="carouselResume()">
+              <div class="carousel-slider" id="carousel-slider">
+                <% 
+                  // Ensure unique products (remove duplicates by ID)
+                  const uniqueProducts = [];
+                  const seenIds = new Set();
+                  featuredProducts.forEach(p => {
+                    if (!seenIds.has(p.id)) {
+                      seenIds.add(p.id);
+                      uniqueProducts.push(p);
+                    }
+                  });
+                  // Create 2 copies for seamless infinite loop (only if we have products)
+                  const carouselProducts = uniqueProducts.length > 0 ? [...uniqueProducts, ...uniqueProducts] : [];
+                %>
+                <% carouselProducts.forEach((p, index) => { %>
+                  <div class="carousel-item" data-product-id="<%= p.id %>">
+                    <div class="carousel-product-card">
+                      <div class="carousel-img-wrapper">
+                        <a href="/product/<%= p.slug %>" class="carousel-img-link">
+                          <img src="<%= p.image || '/img/placeholder.jpg' %>" alt="<%= p.title %>" loading="lazy" decoding="async">
+                          <div class="carousel-img-overlay">
+                            <span class="view-detail-btn">Xem chi tiết</span>
+                          </div>
+                        </a>
+                        <div class="hot-badge">
+                          <span>HOT</span>
+                        </div>
+                      </div>
+                      
+                      <div class="carousel-product-info">
+                        <h3 class="carousel-product-title">
+                          <a href="/product/<%= p.slug %>"><%= p.title %></a>
+                        </h3>
+                        
+                        <div class="carousel-product-meta">
+                          <div class="carousel-stock-status">
+                            <% if (p.stock > 0) { %>
+                              <span class="stock-badge in-stock-badge">Còn hàng</span>
+                            <% } else { %>
+                              <span class="stock-badge out-stock-badge">Hết hàng</span>
+                            <% } %>
+                          </div>
+                          
+                          <div class="carousel-product-price">
+                            <span class="price-value"><%= ((p.price_cents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+                          </div>
+                        </div>
+                        
+                        <div class="carousel-product-buttons">
+                          <% if (p.stock > 0) { %>
+                            <% if (currentUser) { %>
+                              <button class="btn-buy-now" onclick="addToCart(<%= p.id %>, true, '<%= csrfToken %>')" type="button">
+                                <span class="btn-icon">⚡</span>
+                                <span class="btn-text">Mua ngay</span>
+                              </button>
+                              <button class="btn-add-cart" onclick="addToCart(<%= p.id %>, false, '<%= csrfToken %>')" type="button" title="Thêm vào giỏ hàng">
+                                <span class="btn-icon">🛒</span>
+                              </button>
+                            <% } else { %>
+                              <a href="/login" class="btn-buy-now">
+                                <span class="btn-icon">⚡</span>
+                                <span class="btn-text">Mua ngay</span>
+                              </a>
+                            <% } %>
+                          <% } else { %>
+                            <button class="btn-disabled" disabled>
+                              <span>❌ Hết hàng</span>
+                            </button>
+                          <% } %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+            
+            <button class="carousel-nav-btn next-btn" onclick="carouselNext()" onmouseenter="carouselPause()" onmouseleave="carouselResume()" aria-label="Sau">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      <% } else { %>
+        <!-- Fallback hero if no featured products -->
+        <div class="hero-carousel-section">
+          <div class="hero-header">
+            <h1 class="hero-title"><%= typeof homepageSettings !== 'undefined' && homepageSettings.hero_title ? homepageSettings.hero_title : 'SafeKeyS' %></h1>
+            <p class="hero-subtitle"><%= typeof homepageSettings !== 'undefined' && homepageSettings.hero_subtitle ? homepageSettings.hero_subtitle : 'Mua key phần mềm, game nhanh chóng - Uy tín - Nhanh gọn - Hỗ trợ 24/7' %></p>
+            <div class="hero-features">
+              <%
+                const fallbackFeatures = typeof homepageSettings !== 'undefined' && homepageSettings.hero_features 
+                  ? homepageSettings.hero_features.split('•').filter(f => f.trim())
+                  : ['Thanh toán an toàn', 'Giao key ngay lập tức', 'Bảo hành chính hãng'];
+                fallbackFeatures.forEach((feature, index) => {
+              %>
+                <span class="hero-feature"><%= feature.trim() %></span>
+                <% if (index < fallbackFeatures.length - 1) { %>
+                  <span class="hero-feature-divider">•</span>
+                <% } %>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+      <% } %>
+      
+      <h2 style="margin-top: 40px;">Tất cả sản phẩm</h2>
+    <% } %>
+
+    <div class="filters-section">
+  <div class="filters-row" id="filters-row">
+    <div class="filter-group">
+      <label for="sort">Sắp xếp:</label>
+      <select id="sort" onchange="handleSort()">
+        <option value="newest" <%= !sort || sort === 'newest' ? 'selected' : '' %>>Mới nhất</option>
+        <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Cũ nhất</option>
+        <option value="price-low" <%= sort === 'price-low' ? 'selected' : '' %>>Giá thấp → cao</option>
+        <option value="price-high" <%= sort === 'price-high' ? 'selected' : '' %>>Giá cao → thấp</option>
+        <option value="name" <%= sort === 'name' ? 'selected' : '' %>>Tên A → Z</option>
+        <option value="stock" <%= sort === 'stock' ? 'selected' : '' %>>Còn hàng</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label for="category">Danh mục:</label>
+      <select id="category" onchange="handleCategory()">
+        <option value="" <%= !category || category === '' ? 'selected' : '' %>>Tất cả</option>
+        <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
+          <% categories.forEach(cat => { %>
+            <% if (cat && cat.slug && cat.name) { %>
+              <option value="<%= cat.slug %>" <%= category === cat.slug ? 'selected' : '' %>><%= cat.name %></option>
+            <% } %>
+          <% }) %>
+        <% } else { %>
+          <option value="" disabled>Chưa có danh mục</option>
+        <% } %>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label for="price-range">Khoảng giá:</label>
+      <select id="price-range" onchange="handlePriceRange()">
+        <option value="" <%= !priceRange || priceRange === '' ? 'selected' : '' %>>Tất cả</option>
+        <option value="0-50000" <%= priceRange === '0-50000' ? 'selected' : '' %>>Dưới 50.000 VND</option>
+        <option value="50000-100000" <%= priceRange === '50000-100000' ? 'selected' : '' %>>50.000 - 100.000 VND</option>
+        <option value="100000-200000" <%= priceRange === '100000-200000' ? 'selected' : '' %>>100.000 - 200.000 VND</option>
+        <option value="200000-500000" <%= priceRange === '200000-500000' ? 'selected' : '' %>>200.000 - 500.000 VND</option>
+        <option value="500000-999999" <%= priceRange === '500000-999999' ? 'selected' : '' %>>Trên 500.000 VND</option>
+      </select>
+    </div>
+    
+    <div class="filter-actions">
+      <button class="btn secondary" onclick="clearFilters()">Xóa bộ lọc</button>
+    </div>
+  </div>
+</div>
+
+<div class="products-grid">
+  <% products.forEach(p => { %>
+    <div class="product-card">
+      <div class="product-image">
+            <img src="<%= p.image || '/img/placeholder.jpg' %>" alt="<%= p.title %>" loading="lazy" decoding="async">
+        <div class="product-overlay">
+          <a href="/product/<%= p.slug %>" class="btn quick-view">Xem chi tiết</a>
+        </div>
+      </div>
+      <div class="product-info">
+        <h3 class="product-title">
+          <a href="/product/<%= p.slug %>"><%= p.title %></a>
+        </h3>
+        
+        <% if (currentUser && currentUser.role==='admin') { %>
+          <div class="admin-actions">
+            <a class="btn small" href="/admin/products/<%= p.id %>/edit">Sửa</a>
+            <form action="/admin/products/<%= p.id %>/delete?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Xóa sản phẩm này?')">
+              <button class="btn small danger">Xóa</button>
+            </form>
+          </div>
+        <% } %>
+        
+        <p class="product-description"><%= (p.description || '').slice(0,80) %><%= (p.description && p.description.length > 80) ? '...' : '' %></p>
+        
+        <div class="product-stock">
+          <% if (p.stock > 0) { %>
+            <span class="in-stock">✅ Còn hàng (<%= p.stock %>)</span>
+          <% } else { %>
+            <span class="out-of-stock">❌ Hết hàng</span>
+          <% } %>
+        </div>
+        
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="price"><%= ((p.price_cents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+          </div>
+          <div class="product-actions">
+            <% if (currentUser) { %>
+              <button class="btn wishlist-btn" onclick="toggleWishlist(<%= p.id %>, '<%= csrfToken %>')" type="button" title="Thêm vào danh sách yêu thích" data-product-id="<%= p.id %>">
+                <span>❤️</span>
+              </button>
+            <% } %>
+            
+            <% if (p.stock > 0) { %>
+              <% if (currentUser) { %>
+                <button class="btn primary" onclick="addToCart(<%= p.id %>, true, '<%= csrfToken %>')" type="button">
+                  <span>⚡</span>
+                  Mua ngay
+                </button>
+                <button class="btn" onclick="addToCart(<%= p.id %>, false, '<%= csrfToken %>')" type="button">
+                  <span>🛒</span>
+                  Thêm giỏ
+                </button>
+              <% } else { %>
+                <a href="/login" class="btn primary">
+                  <span>⚡</span>
+                  Mua ngay
+                </a>
+                <a href="/login" class="btn">
+                  <span>🛒</span>
+                  Thêm giỏ
+                </a>
+              <% } %>
+            <% } else { %>
+              <button class="btn disabled" disabled>
+                <span>❌</span>
+                Hết hàng
+              </button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+    <% if (products.length === 0) { %>
+      <div class="no-products">
+        <div class="no-products-icon">🔍</div>
+        <h3>Không tìm thấy sản phẩm</h3>
+        <p class="muted">Hãy thử tìm kiếm với từ khóa khác</p>
+        <a href="/" class="btn primary">Xem tất cả sản phẩm</a>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<style>
+/* Combined Hero & Carousel Section - Professional Design with Animations */
+.hero-carousel-section {
+  margin: 0 0 50px 0;
+  padding: 40px 0;
+  position: relative;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.hero-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 50px 30px;
+  background: linear-gradient(135deg, 
+    rgba(22, 163, 74, 0.25) 0%, 
+    rgba(34, 197, 94, 0.18) 30%,
+    rgba(22, 163, 74, 0.22) 60%,
+    rgba(16, 185, 129, 0.15) 100%);
+  border: 2px solid rgba(34, 197, 94, 0.5);
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 12px 48px rgba(22, 163, 74, 0.3),
+    0 0 0 2px rgba(34, 197, 94, 0.2) inset,
+    0 0 60px rgba(22, 163, 74, 0.2);
+  animation: heroFadeIn 0.8s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+/* Animated background glow */
+.hero-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    #22c55e 20%,
+    var(--green-500) 40%, 
+    var(--green) 50%, 
+    var(--green-500) 60%,
+    #22c55e 80%,
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmerBorder 3s ease-in-out infinite;
+  opacity: 1;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+}
+
+/* Floating particles effect */
+.hero-header::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(34, 197, 94, 0.25) 0%, transparent 35%),
+    radial-gradient(circle at 80% 70%, rgba(22, 163, 74, 0.2) 0%, transparent 35%),
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 40%);
+  animation: floatBackground 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-title {
+  font-size: 48px;
+  font-weight: 900;
+  margin: 0 0 20px 0;
+  background: linear-gradient(135deg, #ffffff 0%, #86efac 30%, var(--green-500) 60%, #10b981 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  position: relative;
+  z-index: 1;
+  animation: titleFadeIn 1s ease-out 0.2s backwards,
+             gradientShimmer 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.4));
+  text-shadow: 0 0 40px rgba(34, 197, 94, 0.5);
+}
+
+.hero-subtitle {
+  color: #e5e7eb;
+  font-size: 18px;
+  margin: 0 0 28px 0;
+  font-weight: 500;
+  line-height: 1.7;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 1;
+  animation: subtitleSlideIn 1s ease-out 0.4s backwards;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hero-features {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  position: relative;
+  z-index: 1;
+  animation: featuresFadeIn 1s ease-out 0.6s backwards;
+}
+
+.hero-feature {
+  color: #f3f4f6;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 10px 18px;
+  background: rgba(34, 197, 94, 0.2);
+  border-radius: 10px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.hero-feature::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.hero-feature:hover {
+  background: rgba(34, 197, 94, 0.3);
+  border-color: rgba(34, 197, 94, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+  color: #ffffff;
+}
+
+.hero-feature:hover::before {
+  left: 100%;
+}
+
+.hero-feature-divider {
+  color: rgba(229, 231, 235, 0.6);
+  font-size: 18px;
+  opacity: 0.6;
+  animation: pulseDivider 2s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+/* Animations */
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes titleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtitleSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes featuresFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradientShimmer {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shimmerBorder {
+  0%, 100% {
+    background-position: -200% 0;
+  }
+  50% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes floatBackground {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(30px, -30px) rotate(120deg);
+  }
+  66% {
+    transform: translate(-20px, 20px) rotate(240deg);
+  }
+}
+
+@keyframes pulseDivider {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.carousel-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding: 0 20px;
+}
+
+.carousel-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  color: var(--fg);
+  letter-spacing: -0.3px;
+}
+
+.carousel-subtitle {
+  color: var(--muted);
+  font-size: 15px;
+  margin: 0;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+.carousel-section {
+  position: relative;
+  margin: 0 auto;
+  max-width: 100%;
+  padding: 0 80px;
+  width: 100%;
+}
+
+.carousel-viewport {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  border-radius: 20px;
+}
+
+.carousel-slider {
+  display: flex;
+  gap: 24px;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.carousel-slider.auto-scroll {
+  animation: autoScrollCarousel 30s linear infinite;
+}
+
+.carousel-slider.paused {
+  animation-play-state: paused !important;
+}
+
+@keyframes autoScrollCarousel {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50% - 12px)); /* Move by half (2 sets) */
+  }
+}
+
+.carousel-item {
+  flex: 0 0 calc(25% - 18px);
+  min-width: 0;
+}
+
+.carousel-product-card {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.carousel-product-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s;
+  z-index: 1;
+}
+
+.carousel-product-card:hover::before {
+  transform: scaleX(1);
+}
+
+.carousel-product-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 16px 48px rgba(22, 163, 74, 0.3);
+  border-color: var(--green);
+}
+
+.carousel-img-wrapper {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--bg) 0%, rgba(22, 163, 74, 0.05) 100%);
+}
+
+.carousel-img-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-product-card:hover .carousel-img-wrapper img {
+  transform: scale(1.15);
+}
+
+.carousel-img-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s;
+  z-index: 2;
+}
+
+.carousel-product-card:hover .carousel-img-overlay {
+  opacity: 1;
+}
+
+.view-detail-btn {
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-700) 100%);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.4);
+  transform: scale(0.9);
+  transition: transform 0.3s;
+}
+
+.carousel-product-card:hover .view-detail-btn {
+  transform: scale(1);
+}
+
+.hot-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  padding: 6px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.hot-badge span {
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.carousel-product-info {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.carousel-product-title {
+  margin: 0 0 14px 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  min-height: 48px;
+}
+
+.carousel-product-title a {
+  color: var(--fg);
+  text-decoration: none;
+  transition: color 0.3s;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.carousel-product-title a:hover {
+  color: var(--green);
+}
+
+.carousel-product-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.carousel-stock-status {
+  flex-shrink: 0;
+}
+
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.in-stock-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.out-stock-badge {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.carousel-product-price {
+  flex: 1;
+  text-align: right;
+}
+
+.price-value {
+  color: var(--green);
+  font-size: 22px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.carousel-product-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.btn-buy-now,
+.btn-add-cart,
+.btn-disabled {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.btn-buy-now {
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-700) 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+}
+
+.btn-buy-now:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(22, 163, 74, 0.4);
+}
+
+.btn-add-cart {
+  background: var(--card);
+  border: 2px solid var(--border);
+  color: var(--fg);
+  flex: 0 0 48px;
+  padding: 0;
+}
+
+.btn-add-cart:hover {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+  transform: scale(1.1);
+}
+
+.btn-disabled {
+  background: rgba(107, 114, 128, 0.2);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.btn-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.btn-text {
+  font-size: 14px;
+}
+
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--border);
+  color: var(--fg);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-nav-btn:hover {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 12px 32px rgba(22, 163, 74, 0.4);
+}
+
+.carousel-nav-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.prev-btn {
+  left: 0;
+}
+
+.next-btn {
+  right: 0;
+}
+
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.carousel-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 0;
+}
+
+.carousel-indicator:hover,
+.carousel-indicator.active {
+  background: var(--green);
+  border-color: var(--green);
+  transform: scale(1.2);
+}
+
+@media (max-width: 1200px) {
+  .carousel-item {
+    flex: 0 0 calc(33.333% - 16px);
+  }
+}
+
+@media (max-width: 1200px) {
+  .carousel-section {
+    padding: 0 70px;
+  }
+}
+
+@media (max-width: 992px) {
+  .hero-header {
+    padding: 40px 20px;
+    border-radius: 20px;
+  }
+  
+  .hero-title {
+    font-size: 36px;
+  }
+  
+  .hero-subtitle {
+    font-size: 16px;
+  }
+  
+  .hero-features {
+    gap: 16px;
+  }
+  
+  .carousel-section {
+    padding: 0 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-carousel-section {
+    margin: 0 0 30px 0;
+    padding: 24px 0;
+  }
+  
+  .hero-header {
+    margin-bottom: 30px;
+    padding: 36px 16px;
+    border-radius: 18px;
+  }
+  
+  .hero-title {
+    font-size: 32px;
+    margin-bottom: 14px;
+  }
+  
+  .hero-subtitle {
+    font-size: 15px;
+    margin-bottom: 22px;
+  }
+  
+  .hero-features {
+    gap: 12px;
+    margin-top: 22px;
+  }
+  
+  .hero-feature {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+  
+  .hero-feature-divider {
+    font-size: 14px;
+  }
+  
+  .carousel-header {
+    margin-bottom: 24px;
+    padding: 0 16px;
+  }
+  
+  .carousel-title {
+    font-size: 22px;
+  }
+  
+  .carousel-subtitle {
+    font-size: 14px;
+  }
+  
+  .carousel-section {
+    padding: 0 50px;
+  }
+  
+  .carousel-nav-btn {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .prev-btn {
+    left: 5px;
+  }
+  
+  .next-btn {
+    right: 5px;
+  }
+  
+  .carousel-item {
+    flex: 0 0 calc(50% - 12px);
+  }
+  
+  .carousel-img-wrapper {
+    height: 180px;
+  }
+  
+  .carousel-product-info {
+    padding: 16px;
+  }
+  
+  .carousel-product-title {
+    font-size: 14px;
+    min-height: 42px;
+  }
+  
+  .price-value {
+    font-size: 18px;
+  }
+  
+  .btn-buy-now,
+  .btn-add-cart {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .btn-add-cart {
+    flex: 0 0 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-carousel-section {
+    margin: 0 0 24px 0;
+    padding: 20px 0;
+  }
+  
+  .hero-header {
+    padding: 28px 12px;
+    margin-bottom: 24px;
+    border-radius: 16px;
+  }
+  
+  .hero-title {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  
+  .hero-subtitle {
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+  
+  .hero-features {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  
+  .hero-feature {
+    padding: 8px 16px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .hero-feature-divider {
+    display: none;
+  }
+  
+  .carousel-section {
+    padding: 0 45px;
+  }
+  
+  .carousel-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .carousel-nav-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .carousel-item {
+    flex: 0 0 100%;
+  }
+  
+  .carousel-product-title {
+    font-size: 13px;
+    min-height: 40px;
+  }
+  
+  .product-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .product-actions form,
+  .product-actions a {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .product-actions .wishlist-btn {
+    flex: 0 0 auto;
+  }
+}
+
+.home-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 40px;
+  align-items: start;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 1600px) {
+  .home-layout {
+    grid-template-columns: 320px 1fr;
+    gap: 50px;
+  }
+}
+
+.categories-sidebar {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(22, 163, 74, 0.03) 100%);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  border-radius: 20px;
+  padding: 0;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 
+    0 4px 24px rgba(22, 163, 74, 0.1),
+    0 0 0 1px rgba(22, 163, 74, 0.05) inset;
+  animation: sidebarFadeIn 0.6s ease-out;
+}
+
+@keyframes sidebarFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(22, 163, 74, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.12) 0%, rgba(22, 163, 74, 0.05) 100%);
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--fg);
+  background: linear-gradient(135deg, var(--fg) 0%, var(--green-500) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
+}
+
+.sidebar-toggle {
+  display: none;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  color: var(--green-500);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(22, 163, 74, 0.2);
+  border-color: var(--green);
+  transform: scale(1.05);
+}
+
+.categories-list {
+  padding: 16px 12px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.categories-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.categories-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.categories-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.categories-list::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--fg-secondary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 8px;
+  position: relative;
+  background: rgba(22, 163, 74, 0.04);
+  border: 1px solid transparent;
+  overflow: hidden;
+}
+
+.category-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--gradient-primary);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.3s ease;
+}
+
+.category-item:hover {
+  background: rgba(22, 163, 74, 0.12);
+  border-color: rgba(22, 163, 74, 0.2);
+  transform: translateX(6px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
+}
+
+.category-item:hover::before {
+  transform: scaleY(1);
+}
+
+.category-item.active {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.18) 0%, rgba(22, 163, 74, 0.12) 100%);
+  border-color: rgba(22, 163, 74, 0.3);
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.2);
+}
+
+.category-item.active::before {
+  transform: scaleY(1);
+}
+
+.category-item.active .category-name {
+  color: var(--green-500);
+}
+
+.category-icon {
+  display: none;
+}
+
+.category-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.category-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-count {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.category-arrow {
+  font-size: 16px;
+  color: var(--muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.category-item:hover .category-arrow {
+  transform: translateX(4px);
+  color: var(--green);
+}
+
+.category-item.view-all {
+  margin-top: 16px;
+  padding-top: 18px;
+  border-top: 2px solid rgba(22, 163, 74, 0.2);
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%);
+  border-left: 2px solid var(--green);
+}
+
+.category-item.view-all:hover {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.18) 0%, rgba(22, 163, 74, 0.12) 100%);
+  border-left-color: var(--green-500);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.25);
+}
+
+.empty-sidebar {
+  padding: 20px;
+  text-align: center;
+}
+
+.main-content {
+  min-width: 0;
+}
+
+
+.search-results {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.search-results h2 {
+  margin: 0 0 8px 0;
+  color: var(--fg);
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+  width: 100%;
+}
+
+@media (min-width: 1400px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 28px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 32px;
+  }
+}
+
+.product-card {
+  background: linear-gradient(135deg, var(--card) 0%, rgba(22, 163, 74, 0.02) 100%);
+  border: 1px solid rgba(22, 163, 74, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(22, 163, 74, 0.05) inset;
+  animation: cardFadeIn 0.6s ease-out backwards;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--green-500), var(--green), var(--green-500), transparent);
+  background-size: 200% 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s;
+  z-index: 2;
+  animation: shimmerBorder 3s ease-in-out infinite;
+}
+
+.product-card:hover::before {
+  transform: scaleX(1);
+}
+
+.product-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 
+    0 20px 60px rgba(22, 163, 74, 0.25),
+    0 0 0 1px rgba(22, 163, 74, 0.2) inset;
+  border-color: var(--green);
+  background: linear-gradient(135deg, var(--card) 0%, rgba(22, 163, 74, 0.06) 100%);
+}
+
+.product-image {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.12);
+}
+
+.product-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.product-card:hover .product-image::after {
+  opacity: 1;
+}
+
+.product-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+.product-card:hover .product-overlay {
+  opacity: 1;
+}
+
+.quick-view {
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-700) 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-view::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.quick-view:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.quick-view:hover {
+  background: linear-gradient(135deg, var(--green-700) 0%, #166534 100%);
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 6px 24px rgba(22, 163, 74, 0.5);
+}
+
+.product-info {
+  padding: 20px;
+  background: var(--card);
+}
+
+.product-title {
+  margin: 0 0 12px 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.product-title a {
+  color: var(--fg);
+  text-decoration: none;
+  transition: color 0.3s;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-title a:hover {
+  color: var(--green-500);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn.small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #dc2626;
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn.danger:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+.product-description {
+  margin: 0 0 12px 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.product-stock {
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.in-stock {
+  color: #10b981;
+}
+
+.in-stock::before {
+  content: '●';
+  font-size: 8px;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.out-of-stock {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.out-of-stock::before {
+  content: '●';
+  font-size: 8px;
+}
+
+.product-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  min-height: 50px;
+}
+
+.product-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-price .price {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--green);
+  line-height: 1.2;
+}
+
+.product-price .price::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: var(--green);
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.product-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.product-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.product-actions .wishlist-btn {
+  padding: 10px;
+  min-width: auto;
+}
+
+.wishlist-form {
+  margin: 0;
+}
+
+.wishlist-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 10px;
+  min-width: 40px;
+  transition: all 0.2s;
+}
+
+.wishlist-btn:hover {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: white;
+  transform: scale(1.1);
+}
+
+.btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #6b7280;
+  border-color: #6b7280;
+}
+
+.no-products {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.no-products-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.no-products h3 {
+  margin: 0 0 10px 0;
+  color: var(--fg);
+}
+
+.filters-section {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(22, 163, 74, 0.03) 100%);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 40px;
+  box-shadow: 
+0 4px 24px rgba(22, 163, 74, 0.1),
+    0 0 0 1px rgba(22, 163, 74, 0.05) inset;
+  position: relative;
+  overflow: visible;
+  animation: filtersFadeIn 0.6s ease-out 0.2s backwards;
+}
+
+@keyframes filtersFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filters-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--green-500), var(--green), var(--green-500), transparent);
+  background-size: 200% 100%;
+  animation: shimmerBorder 3s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+.filters-row {
+  display: flex;
+  gap: 20px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 150px;
+  position: relative;
+  z-index: 1;
+}
+
+.filter-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.filter-group select {
+  padding: 12px 16px;
+  padding-right: 40px;
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  border-radius: 12px;
+  background: rgba(22, 163, 74, 0.06);
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2316a34a' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  min-height: 44px;
+}
+
+.filter-group select option {
+  background: var(--card);
+  color: var(--fg);
+  padding: 12px;
+}
+
+.filter-group select:hover {
+  border-color: rgba(22, 163, 74, 0.3);
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--green);
+  background: rgba(22, 163, 74, 0.12);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  transform: translateY(-1px);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+  align-items: center;
+}
+
+.filter-actions .btn {
+  padding: 12px 20px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-actions .btn.secondary {
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  color: var(--fg-secondary);
+}
+
+.filter-actions .btn.secondary:hover {
+  background: rgba(22, 163, 74, 0.15);
+  border-color: rgba(22, 163, 74, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+.filter-actions .btn.primary {
+  background: var(--gradient-primary);
+  border: 1px solid var(--green-700);
+  color: white;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+}
+
+.filter-actions .btn.primary:hover {
+  background: linear-gradient(135deg, var(--green-700) 0%, #166534 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(22, 163, 74, 0.4);
+}
+
+@media (max-width: 1024px) {
+  .home-layout {
+    grid-template-columns: 250px 1fr;
+    gap: 24px;
+  }
+  
+  .main-content {
+    min-width: 0; /* Allow content to shrink */
+  }
+}
+
+@media (max-width: 768px) {
+  .home-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .categories-sidebar {
+    position: relative;
+    top: 0;
+    max-height: none;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .sidebar-header {
+    padding: 16px;
+  }
+  
+  .sidebar-toggle {
+    display: block;
+  }
+  
+  .categories-list:not(.show) {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 0 12px;
+  }
+  
+  .categories-list.show {
+    max-height: 1000px;
+    padding: 12px;
+    overflow-y: auto;
+  }
+  
+  .category-item {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    min-width: auto;
+  }
+  
+  .filter-actions {
+    margin-left: 0;
+    justify-content: stretch;
+  }
+  
+  .filter-actions .btn {
+    flex: 1;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+  }
+  
+  .product-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .product-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+
+<script>
+// Enhanced Carousel System - Optimized
+let carouselAutoPlay = true;
+let carouselSlider = null;
+let carouselItems = null;
+let isAnimating = false;
+
+function initCarousel() {
+  carouselSlider = document.getElementById('carousel-slider');
+  if (!carouselSlider) return;
+  
+  carouselItems = carouselSlider.querySelectorAll('.carousel-item');
+  if (carouselItems.length === 0) return;
+  
+  // Add auto-scroll class for CSS animation
+  carouselSlider.classList.add('auto-scroll');
+  
+  // Handle seamless infinite loop - when animation completes, reset without jarring
+  carouselSlider.addEventListener('animationiteration', () => {
+    // Animation naturally loops due to duplicate items, no manual reset needed
+    // This event fires when animation restarts (every 30s)
+  });
+}
+
+function carouselPause() {
+  if (carouselSlider) {
+    carouselSlider.classList.add('paused');
+    carouselAutoPlay = false;
+  }
+}
+
+function carouselResume() {
+  if (carouselSlider && carouselAutoPlay && !isAnimating) {
+    carouselSlider.classList.remove('paused');
+    carouselSlider.classList.remove('smooth');
+    // Restart animation
+    carouselSlider.style.animation = 'none';
+    setTimeout(() => {
+      carouselSlider.style.animation = '';
+      carouselSlider.classList.add('auto-scroll');
+    }, 10);
+  }
+}
+
+function carouselPrev() {
+  if (!carouselSlider || isAnimating) return;
+  
+  isAnimating = true;
+  carouselPause();
+  
+  // Use CSS transform for smooth manual navigation
+  carouselSlider.classList.remove('auto-scroll');
+  carouselSlider.classList.add('smooth');
+  
+  const currentTransform = getComputedStyle(carouselSlider).transform;
+  const matrix = currentTransform !== 'none' 
+    ? new DOMMatrix(currentTransform)
+    : new DOMMatrix();
+  let currentX = matrix.e || 0;
+  
+  const firstItem = carouselItems[0];
+  const itemWidth = firstItem.offsetWidth + 24; // 24px gap
+  
+  currentX += itemWidth;
+  
+  // If at start of second set, jump to start of first set seamlessly
+  const totalWidth = (carouselItems.length / 2) * itemWidth;
+  if (currentX > 0) {
+    currentX = -totalWidth + itemWidth;
+  }
+  
+  carouselSlider.style.transform = `translateX(${currentX}px)`;
+  
+  setTimeout(() => {
+    isAnimating = false;
+    carouselResume();
+  }, 600);
+}
+
+function carouselNext() {
+  if (!carouselSlider || isAnimating) return;
+  
+  isAnimating = true;
+  carouselPause();
+  
+  // Use CSS transform for smooth manual navigation
+  carouselSlider.classList.remove('auto-scroll');
+  carouselSlider.classList.add('smooth');
+  
+  const currentTransform = getComputedStyle(carouselSlider).transform;
+  const matrix = currentTransform !== 'none' 
+    ? new DOMMatrix(currentTransform)
+    : new DOMMatrix();
+  let currentX = matrix.e || 0;
+  
+  const firstItem = carouselItems[0];
+  const itemWidth = firstItem.offsetWidth + 24; // 24px gap
+  
+  currentX -= itemWidth;
+  
+  // If at end of first set, jump to start of second set seamlessly
+  const totalWidth = (carouselItems.length / 2) * itemWidth;
+  if (Math.abs(currentX) >= totalWidth) {
+    currentX = -itemWidth;
+  }
+  
+  carouselSlider.style.transform = `translateX(${currentX}px)`;
+  
+  setTimeout(() => {
+    isAnimating = false;
+    carouselResume();
+  }, 600);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  initCarousel();
+  
+  // Pause on hover
+  const viewport = document.querySelector('.carousel-viewport');
+  if (viewport) {
+    viewport.addEventListener('mouseenter', carouselPause);
+    viewport.addEventListener('mouseleave', () => {
+      if (carouselAutoPlay) {
+        carouselResume();
+      }
+    });
+  }
+  
+  // Touch/swipe support for mobile
+  let touchStartX = 0;
+  let touchEndX = 0;
+  
+  if (carouselSlider) {
+    carouselSlider.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+    
+    carouselSlider.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    });
+  }
+  
+  function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0) {
+        carouselNext(); // Swipe left - next
+      } else {
+        carouselPrev(); // Swipe right - prev
+      }
+    }
+  }
+});
+
+// Enhanced Toast notification function
+let toastQueue = [];
+let isShowingToast = false;
+
+function showToast(message, type = 'success', duration = 3500) {
+  const toast = document.createElement('div');
+  const toastId = 'toast-' + Date.now();
+  toast.id = toastId;
+  toast.className = `toast toast-${type}`;
+  
+  // Icon based on type
+  let icon = '✅';
+  if (type === 'error') icon = '❌';
+  else if (type === 'warning') icon = '⚠️';
+  else if (type === 'info') icon = 'ℹ️';
+  
+  toast.innerHTML = `
+    <div class="toast-icon">${icon}</div>
+    <div class="toast-content">
+      <div class="toast-message">${message}</div>
+      <div class="toast-progress"></div>
+    </div>
+    <button class="toast-close" onclick="closeToast('${toastId}')" aria-label="Đóng">×</button>
+  `;
+  
+  // Add styles if not already added
+  if (!document.getElementById('toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'toast-styles';
+    style.textContent = `
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--card);
+        color: var(--fg);
+        padding: 0;
+        border-radius: 16px;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        max-width: 420px;
+        min-width: 320px;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        overflow: hidden;
+        border: 2px solid var(--border);
+        animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transform-origin: right center;
+      }
+      
+      .toast-icon {
+        font-size: 28px;
+        padding: 18px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(22, 163, 74, 0.1);
+        border-right: 1px solid var(--border);
+      }
+      
+      .toast-content {
+        flex: 1;
+        padding: 18px 20px;
+        position: relative;
+      }
+      
+      .toast-message {
+        font-weight: 600;
+        font-size: 15px;
+        line-height: 1.5;
+        margin-bottom: 8px;
+      }
+      
+      .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: rgba(22, 163, 74, 0.2);
+        transform-origin: left;
+        animation: toastProgress ${duration}ms linear forwards;
+      }
+      
+      .toast-close {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        font-size: 24px;
+        padding: 0 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .toast-close:hover {
+        color: var(--fg);
+        transform: scale(1.2);
+      }
+      
+      .toast-success {
+        border-color: var(--green);
+        background: linear-gradient(135deg, rgba(22, 163, 74, 0.05) 0%, var(--card) 100%);
+      }
+      
+      .toast-success .toast-icon {
+        background: linear-gradient(135deg, rgba(22, 163, 74, 0.15) 0%, rgba(22, 163, 74, 0.05) 100%);
+      }
+      
+      .toast-success .toast-progress {
+        background: linear-gradient(90deg, var(--green) 0%, var(--green-700) 100%);
+      }
+      
+      .toast-error {
+        border-color: #ef4444;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, var(--card) 100%);
+      }
+      
+      .toast-error .toast-icon {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+      }
+      
+      .toast-error .toast-progress {
+        background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+      }
+      
+      .toast-warning {
+        border-color: #f59e0b;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, var(--card) 100%);
+      }
+      
+      .toast-warning .toast-icon {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+      }
+      
+      .toast-warning .toast-progress {
+        background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+      }
+      
+      .toast-info {
+        border-color: #3b82f6;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, var(--card) 100%);
+      }
+      
+      .toast-info .toast-icon {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+      }
+      
+      .toast-info .toast-progress {
+        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+      }
+      
+      @keyframes slideInRight {
+        0% {
+          transform: translateX(120%) scale(0.8);
+          opacity: 0;
+        }
+        60% {
+          transform: translateX(-10px) scale(1.02);
+        }
+        100% {
+          transform: translateX(0) scale(1);
+          opacity: 1;
+        }
+      }
+      
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0) scale(1);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(120%) scale(0.8);
+          opacity: 0;
+        }
+      }
+      
+      @keyframes toastProgress {
+        from {
+          transform: scaleX(1);
+        }
+        to {
+          transform: scaleX(0);
+        }
+      }
+      
+      .toast.hiding {
+        animation: slideOutRight 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+      }
+      
+      @media (max-width: 768px) {
+        .toast {
+          right: 10px;
+          left: 10px;
+          max-width: calc(100% - 20px);
+          min-width: auto;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // Queue management
+  if (isShowingToast) {
+    toastQueue.push({ toast, duration, toastId });
+    return;
+  }
+  
+  isShowingToast = true;
+  document.body.appendChild(toast);
+  
+  // Auto remove after duration
+  setTimeout(() => {
+    closeToast(toastId);
+  }, duration);
+}
+
+function closeToast(toastId) {
+  const toast = document.getElementById(toastId);
+  if (!toast) return;
+  
+  toast.classList.add('hiding');
+  setTimeout(() => {
+    toast.remove();
+    isShowingToast = false;
+    
+    // Show next toast in queue
+    if (toastQueue.length > 0) {
+      const next = toastQueue.shift();
+      setTimeout(() => {
+        document.body.appendChild(next.toast);
+        isShowingToast = true;
+        setTimeout(() => closeToast(next.toastId), next.duration);
+      }, 200);
+    }
+  }, 300);
+}
+
+// Update cart badge
+function updateCartBadge(totalQty) {
+  let cartBadge = document.getElementById('cart-badge');
+  
+  // Create badge if it doesn't exist
+  if (!cartBadge) {
+    const cartLink = document.getElementById('cart-link') || document.querySelector('a[href="/cart"]');
+    if (cartLink) {
+      cartBadge = document.createElement('span');
+      cartBadge.id = 'cart-badge';
+      cartBadge.className = 'cart-badge';
+      cartLink.appendChild(cartBadge);
+    }
+  }
+  
+  if (cartBadge) {
+    cartBadge.textContent = totalQty || 0;
+    cartBadge.setAttribute('aria-label', `Số lượng sản phẩm trong giỏ: ${totalQty || 0}`);
+    
+    if (totalQty > 0) {
+      cartBadge.style.display = 'inline-block';
+      cartBadge.style.animation = 'none';
+      // Trigger animation
+      setTimeout(() => {
+        cartBadge.style.animation = 'pulse 0.5s ease-in-out';
+      }, 10);
+    } else {
+      cartBadge.style.display = 'none';
+    }
+  }
+  
+  // Also update cart link title
+  const cartLink = document.getElementById('cart-link') || document.querySelector('a[href="/cart"]');
+  if (cartLink) {
+    cartLink.title = totalQty > 0 ? `Giỏ hàng (${totalQty} sản phẩm)` : 'Giỏ hàng';
+  }
+}
+
+// Toggle wishlist via AJAX
+async function toggleWishlist(productId, csrfToken) {
+  const button = document.querySelector(`[data-product-id="${productId}"].wishlist-btn`);
+  if (!button) return;
+  
+  // Disable button during request
+  button.disabled = true;
+  button.style.opacity = '0.6';
+  
+  try {
+    const formData = new FormData();
+    formData.append('_csrf', csrfToken);
+    
+    const response = await fetch(`/api/wishlist/toggle/${productId}`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Update button icon based on action
+      const icon = button.querySelector('span');
+      if (data.action === 'added') {
+        icon.textContent = '❤️';
+        showToast(data.message, 'success');
+      } else {
+        icon.textContent = '🤍';
+        showToast(data.message, 'info');
+      }
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch (error) {
+    console.error('Error toggling wishlist:', error);
+    showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+  } finally {
+    button.disabled = false;
+    button.style.opacity = '1';
+  }
+}
+
+// Add to cart via AJAX
+async function addToCart(productId, buyNow = false, csrfToken) {
+  // Disable button during request
+  const buttons = document.querySelectorAll(`[onclick*="addToCart(${productId}"]`);
+  buttons.forEach(btn => {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+  });
+  
+  try {
+    // Use FormData to properly send CSRF token
+    const formData = new FormData();
+    formData.append('_csrf', csrfToken);
+    
+    const response = await fetch(`/api/cart/add/${productId}`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Update cart badge
+      updateCartBadge(data.cart.totalQty);
+      
+      // Show success message
+      showToast(data.message, 'success');
+      
+      // If buy now, redirect to checkout after a short delay
+      if (buyNow) {
+        setTimeout(() => {
+          window.location.href = '/checkout';
+        }, 800);
+        return; // Don't re-enable buttons if redirecting
+      }
+    } else {
+      // Show error message
+      showToast(data.message, 'error');
+    }
+  } catch (error) {
+    console.error('Error adding to cart:', error);
+    showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+  } finally {
+    // Re-enable buttons
+    buttons.forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    });
+  }
+}
+
+function toggleSidebar() {
+  const list = document.querySelector('.categories-list');
+  list.classList.toggle('show');
+}
+
+let currentFilters = {
+  sort: 'newest',
+  category: '',
+  priceRange: '',
+  search: '<%= q || "" %>'
+};
+
+function handleSort() {
+  currentFilters.sort = document.getElementById('sort').value;
+  applyFilters();
+}
+
+function handleCategory() {
+  currentFilters.category = document.getElementById('category').value;
+  applyFilters();
+}
+
+function updateCategoryDropdown(categorySlug) {
+  const categorySelect = document.getElementById('category');
+  if (categorySelect) {
+    categorySelect.value = categorySlug;
+    currentFilters.category = categorySlug;
+  }
+}
+
+function handlePriceRange() {
+  currentFilters.priceRange = document.getElementById('price-range').value;
+  applyFilters();
+}
+
+function clearFilters() {
+  document.getElementById('sort').value = 'newest';
+  document.getElementById('category').value = '';
+  document.getElementById('price-range').value = '';
+  
+  currentFilters = {
+    sort: 'newest',
+    category: '',
+    priceRange: '',
+    search: '<%= q || "" %>'
+  };
+  
+  applyFilters();
+}
+
+async function applyFilters() {
+  const params = new URLSearchParams();
+  
+  if (currentFilters.search) params.set('q', currentFilters.search);
+  if (currentFilters.sort && currentFilters.sort !== 'newest') params.set('sort', currentFilters.sort);
+  if (currentFilters.category) params.set('category', currentFilters.category);
+  if (currentFilters.priceRange) params.set('price', currentFilters.priceRange);
+  
+  const url = params.toString() ? `/?${params.toString()}` : '/';
+  
+  // Show loading indicator
+  const productsGrid = document.querySelector('.products-grid');
+  const filtersRow = document.getElementById('filters-row');
+  if (productsGrid) {
+    productsGrid.style.opacity = '0.5';
+    productsGrid.style.pointerEvents = 'none';
+    productsGrid.style.transition = 'opacity 0.3s ease';
+  }
+  if (filtersRow) {
+    filtersRow.style.opacity = '0.7';
+    filtersRow.style.pointerEvents = 'none';
+  }
+  
+  try {
+    // Fetch filtered products via AJAX
+    const response = await fetch(`/api/products/filter?${params.toString()}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      // Update products grid
+      if (productsGrid) {
+        productsGrid.innerHTML = data.html;
+        productsGrid.style.opacity = '1';
+        productsGrid.style.pointerEvents = 'auto';
+        
+        // Smooth scroll to top of products
+        setTimeout(() => {
+          productsGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+      if (filtersRow) {
+        filtersRow.style.opacity = '1';
+        filtersRow.style.pointerEvents = 'auto';
+      }
+      
+      // Update URL without reload
+      window.history.pushState({}, '', url);
+      
+      // Update page title if needed
+      if (data.count === 0) {
+        showToast('Không tìm thấy sản phẩm nào', 'info');
+      }
+    } else {
+      throw new Error('Failed to filter products');
+    }
+  } catch (error) {
+    console.error('Error filtering products:', error);
+    showToast('Có lỗi xảy ra khi lọc sản phẩm', 'error');
+    
+    // Restore grid
+    if (productsGrid) {
+      productsGrid.style.opacity = '1';
+      productsGrid.style.pointerEvents = 'auto';
+    }
+    if (filtersRow) {
+      filtersRow.style.opacity = '1';
+      filtersRow.style.pointerEvents = 'auto';
+    }
+  }
+}
+
+// Initialize filters from URL params
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  const sortSelect = document.getElementById('sort');
+  const categorySelect = document.getElementById('category');
+  const priceSelect = document.getElementById('price-range');
+  
+  if (urlParams.get('sort') && sortSelect) {
+    sortSelect.value = urlParams.get('sort');
+    currentFilters.sort = urlParams.get('sort');
+  }
+  
+  if (urlParams.get('category') && categorySelect) {
+    categorySelect.value = urlParams.get('category');
+    currentFilters.category = urlParams.get('category');
+  }
+  
+  if (urlParams.get('price') && priceSelect) {
+    priceSelect.value = urlParams.get('price');
+    currentFilters.priceRange = urlParams.get('price');
+  }
+  
+  // Debug: Log categories to console
+  if (categorySelect) {
+    console.log('Category dropdown options:', categorySelect.options.length);
+    console.log('Current category value:', categorySelect.value);
+  }
+});
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', function(event) {
+  // Reload filters from URL when navigating back/forward
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  const sortSelect = document.getElementById('sort');
+  const categorySelect = document.getElementById('category');
+  const priceSelect = document.getElementById('price-range');
+  
+  if (sortSelect) {
+    const sort = urlParams.get('sort') || 'newest';
+    sortSelect.value = sort;
+    currentFilters.sort = sort;
+  }
+  
+  if (categorySelect) {
+    const category = urlParams.get('category') || '';
+    categorySelect.value = category;
+    currentFilters.category = category;
+  }
+  
+  if (priceSelect) {
+    const price = urlParams.get('price') || '';
+    priceSelect.value = price;
+    currentFilters.priceRange = price;
+  }
+  
+  // Apply filters without changing URL (already changed by browser)
+  applyFilters();
+});
+</script>
+
+

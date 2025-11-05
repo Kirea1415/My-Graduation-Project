@@ -1,0 +1,100 @@
+<div class="static-page">
+  <h1>📋 Chính sách</h1>
+  
+  <div class="content-card">
+    <% if (typeof html !== 'undefined' && html && html.trim().length) { %>
+      <div><%- html %></div>
+    <% } else { %>
+      <div class="policy-section">
+        <div class="policy-icon">🔄</div>
+        <h2>Đổi trả</h2>
+        <ul>
+          <li>Sản phẩm dạng key số: không đổi trả sau khi đã kích hoạt thành công.</li>
+          <li>Trường hợp key lỗi không kích hoạt: hoàn tiền hoặc đổi key khác trong vòng 7 ngày.</li>
+          <li>Key game Steam/Epic/Origin: không đổi trả sau khi đã kích hoạt.</li>
+        </ul>
+      </div>
+      
+      <div class="policy-section">
+        <div class="policy-icon">🛡️</div>
+        <h2>Bảo hành</h2>
+        <ul>
+          <li>Key bảo hành theo điều kiện ghi trong mô tả sản phẩm.</li>
+          <li>Thời gian bảo hành: từ 1 tháng đến trọn đời tùy loại key.</li>
+          <li>Hỗ trợ kỹ thuật miễn phí trong quá trình sử dụng.</li>
+        </ul>
+      </div>
+      
+      <div class="policy-section">
+        <div class="policy-icon">🔒</div>
+        <h2>Bảo mật</h2>
+        <ul>
+          <li>Chúng tôi bảo vệ thông tin cá nhân theo quy định hiện hành.</li>
+          <li>Không chia sẻ thông tin khách hàng cho bên thứ ba.</li>
+          <li>Mã hóa dữ liệu thanh toán và thông tin nhạy cảm.</li>
+        </ul>
+      </div>
+      
+      <div class="policy-section">
+        <div class="policy-icon">💳</div>
+        <h2>Thanh toán</h2>
+        <ul>
+          <li>Chấp nhận thanh toán qua ví điện tử, chuyển khoản ngân hàng.</li>
+          <li>Thanh toán an toàn, được mã hóa SSL.</li>
+          <li>Giao hàng tự động sau khi thanh toán thành công.</li>
+        </ul>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<style>
+.policy-section {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--border);
+}
+
+.policy-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.policy-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.policy-section h2 {
+  margin: 0 0 16px 0;
+  color: var(--fg);
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.policy-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.policy-section li {
+  padding: 12px 0;
+  padding-left: 24px;
+  position: relative;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.policy-section li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--green);
+  font-weight: bold;
+}
+</style>
+
+

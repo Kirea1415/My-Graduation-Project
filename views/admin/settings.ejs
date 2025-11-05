@@ -1,0 +1,1106 @@
+<style>
+.admin-settings {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.settings-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  color: var(--fg);
+  font-weight: 800;
+}
+
+.settings-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+}
+
+.settings-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 30px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.settings-section:hover {
+  border-color: var(--green);
+  box-shadow: 0 4px 20px rgba(22, 163, 74, 0.1);
+}
+
+.settings-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.settings-section-header > div {
+  flex: 1;
+}
+
+.settings-section-title {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-section-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: var(--green);
+  border-radius: 2px;
+}
+
+.settings-section-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.btn-save-section {
+  padding: 12px 24px;
+  background: var(--green);
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 100px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-save-section:hover:not(:disabled) {
+  background: #15803d;
+  border-color: #15803d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+}
+
+.btn-save-section:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-save-section:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-save-section .btn-loader {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.section-feedback {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10;
+  animation: slideInDown 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.section-feedback.success {
+  background: var(--green);
+  color: white;
+}
+
+.section-feedback.error {
+  background: #dc2626;
+  color: white;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--fg);
+  font-size: 15px;
+}
+
+.form-group label .required {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+.form-group .form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.form-group input[type="text"],
+.form-group input[type="url"],
+.form-group textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--fg);
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="url"]:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  background: rgba(22, 163, 74, 0.05);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.form-group input[type="text"]::placeholder,
+.form-group input[type="url"]::placeholder,
+.form-group textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.social-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.social-item {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.social-item:hover {
+  border-color: var(--green);
+  background: rgba(22, 163, 74, 0.05);
+}
+
+.social-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.social-item-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.btn-remove-social {
+  padding: 6px 12px;
+  background: #dc2626;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-social:hover {
+  background: #b91c1c;
+  transform: scale(1.1);
+}
+
+.btn-add-social {
+  padding: 12px 24px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 2px dashed var(--green);
+  border-radius: 10px;
+  color: var(--green);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.btn-add-social:hover {
+  background: rgba(22, 163, 74, 0.2);
+  border-color: #15803d;
+  transform: translateY(-2px);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 24px;
+  margin-top: 30px;
+  border-top: 2px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.btn-save {
+  padding: 14px 32px;
+  background: var(--green);
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.btn-save:hover {
+  background: #22c55e;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
+}
+
+.btn-save:active {
+  transform: translateY(0);
+}
+
+.btn-reset {
+  padding: 14px 32px;
+  background: transparent;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-reset:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.page-link-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--green);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.page-link-preview:hover {
+  background: rgba(34, 197, 94, 0.2);
+  transform: translateX(4px);
+}
+
+.page-link-preview::after {
+  content: '→';
+  font-size: 16px;
+}
+
+.validation-error {
+  display: none;
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 13px;
+}
+
+.validation-error.show {
+  display: block;
+}
+
+.form-group.has-error input,
+.form-group.has-error textarea {
+  border-color: #ef4444;
+}
+
+.success-message {
+  padding: 16px 20px;
+  background: rgba(22, 163, 74, 0.15);
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  color: var(--green);
+  margin-bottom: 24px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideInDown 0.4s ease-out;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.success-message::before {
+  content: '✓';
+  font-size: 20px;
+  font-weight: 700;
+  animation: checkmarkPop 0.5s ease-out;
+}
+
+.success-message::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.error-message {
+  padding: 16px 20px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 2px solid #ef4444;
+  border-radius: 10px;
+  color: #ef4444;
+  margin-bottom: 24px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideInDown 0.4s ease-out;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.error-message::before {
+  content: '✗';
+  font-size: 20px;
+  font-weight: 700;
+  animation: checkmarkPop 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-settings {
+    padding: 0 16px;
+  }
+
+  .settings-section {
+    padding: 24px 20px;
+  }
+
+  .settings-section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-save-section {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .settings-header h1 {
+    font-size: 28px;
+  }
+
+  .social-links-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="admin-settings">
+  <div class="settings-header">
+    <h1>Cài đặt hệ thống</h1>
+    <p class="settings-subtitle">Quản lý nội dung trang và liên kết mạng xã hội</p>
+  </div>
+
+  <% if (typeof flash !== 'undefined' && flash.success && flash.success.length) { %>
+    <div class="success-message">
+      <%= flash.success.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <% if (typeof flash !== 'undefined' && flash.error && flash.error.length) { %>
+    <div class="error-message">
+      <%= flash.error.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <div class="settings-grid">
+    <!-- Social Media Section -->
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <div>
+          <h2 class="settings-section-title">Mạng xã hội</h2>
+          <p class="settings-section-description">
+            Thêm liên kết mạng xã hội để hiển thị trên website. Để trống nếu không muốn hiển thị.
+          </p>
+        </div>
+        <button type="button" class="btn-save-section" onclick="saveSection('social')" id="btn-save-social">
+          <span class="btn-text">Lưu</span>
+          <span class="btn-loader" style="display:none;">⏳</span>
+        </button>
+      </div>
+      
+      <form id="form-social" enctype="multipart/form-data" onsubmit="event.preventDefault(); saveSection('social');">
+        <div id="social-media-list" class="social-links-list">
+          <% 
+            const socialList = settings.social_media_list || [];
+            socialList.forEach((item, index) => {
+          %>
+            <div class="social-item" data-index="<%= index %>">
+              <div class="social-item-header">
+                <h3>Mạng xã hội #<%= index + 1 %></h3>
+                <button type="button" class="btn-remove-social" onclick="removeSocialItem(this)" title="Xóa">
+                  ✕
+                </button>
+              </div>
+              <div class="form-group">
+                <label>Tên mạng xã hội <span class="required">*</span></label>
+                <input
+                  type="text"
+                  name="social_name_<%= index %>"
+                  value="<%= item.name || '' %>"
+                  placeholder="Ví dụ: Facebook, Zalo, YouTube..."
+                  required
+                  class="social-name-input"
+                />
+              </div>
+              <div class="form-group">
+                <label>URL liên kết <span class="required">*</span></label>
+                <input
+                  type="url"
+                  name="social_url_<%= index %>"
+                  value="<%= item.url || '' %>"
+                  placeholder="https://..."
+                  pattern="https?://.*"
+                  required
+                  class="social-url-input"
+                />
+              </div>
+              <div class="form-group">
+                <label>Icon</label>
+                <input
+                  type="file"
+                  name="social_icon_file_<%= index %>"
+                  accept="image/*"
+                  onchange="previewIcon(this, 'social-preview-<%- index %>')"
+                />
+                <% if (item.icon) { %>
+                  <div style="margin-top: 8px; display: flex; align-items: center; gap: 12px;">
+                  <img id="social-preview-<%- index %>" src="<%= item.icon %>" alt="Current icon" style="width: 32px; height: 32px; object-fit: contain; border-radius: 4px; border: 1px solid var(--border);" onerror="this.style.display='none';" />
+                  <span style="font-size: 13px; color: var(--muted);">Icon hiện tại</span>
+                </div>
+              <% } else { %>
+                <img id="social-preview-<%- index %>" style="display: none; width: 32px; height: 32px; object-fit: contain; border-radius: 4px; border: 1px solid var(--border); margin-top: 8px;" />
+                <% } %>
+                <span class="form-hint">Upload file ảnh icon từ máy tính</span>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+        
+        <button type="button" class="btn-add-social" onclick="addSocialItem()">
+          + Thêm mạng xã hội
+        </button>
+      </form>
+    </div>
+
+    <!-- Homepage Content Section -->
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <div>
+          <h2 class="settings-section-title">Nội dung trang chủ</h2>
+          <p class="settings-section-description">
+            Tùy chỉnh nội dung hiển thị trên trang chủ, bao gồm phần giới thiệu và sản phẩm nổi bật.
+            <a href="/" target="_blank" class="page-link-preview">Xem trang chủ</a>
+          </p>
+        </div>
+        <button type="button" class="btn-save-section" onclick="saveSection('homepage')" id="btn-save-homepage">
+          <span class="btn-text">Lưu</span>
+          <span class="btn-loader" style="display:none;">⏳</span>
+        </button>
+      </div>
+      
+      <form id="form-homepage" onsubmit="event.preventDefault(); saveSection('homepage');">
+
+        <!-- Hero Section -->
+        <div class="form-group">
+          <label for="homepage_hero_title">
+            Tiêu đề chính (Hero Title) <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="homepage_hero_title"
+            name="homepage_hero_title"
+            value="<%= settings.homepage_hero_title || 'SafeKeyS' %>"
+            placeholder="Ví dụ: SafeKeyS"
+            required
+            maxlength="100"
+          />
+          <span class="form-hint">
+            Tiêu đề chính hiển thị ở phần đầu trang chủ (kích thước lớn)
+          </span>
+          <div class="validation-error" id="error_hero_title"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="homepage_hero_subtitle">
+            Mô tả phụ (Hero Subtitle) <span class="required">*</span>
+          </label>
+          <textarea
+            id="homepage_hero_subtitle"
+            name="homepage_hero_subtitle"
+            rows="3"
+            placeholder="Ví dụ: Mua key phần mềm, game nhanh chóng - Uy tín - Nhanh gọn - Hỗ trợ 24/7"
+            required
+            maxlength="500"
+          ><%= settings.homepage_hero_subtitle || 'Mua key phần mềm, game nhanh chóng - Uy tín - Nhanh gọn - Hỗ trợ 24/7' %></textarea>
+          <span class="form-hint">
+            Mô tả ngắn gọn về dịch vụ/website (hiển thị dưới tiêu đề chính)
+          </span>
+          <div class="validation-error" id="error_hero_subtitle"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="homepage_hero_features">
+            Tính năng nổi bật <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="homepage_hero_features"
+            name="homepage_hero_features"
+            value="<%= settings.homepage_hero_features || 'Thanh toán an toàn•Giao key ngay lập tức•Bảo hành chính hãng' %>"
+            placeholder="Thanh toán an toàn•Giao key ngay lập tức•Bảo hành chính hãng"
+            required
+            maxlength="300"
+          />
+          <span class="form-hint">
+            Các tính năng nổi bật, phân cách nhau bằng dấu • (bullet). Ví dụ: Tính năng 1•Tính năng 2•Tính năng 3
+          </span>
+          <div class="validation-error" id="error_hero_features"></div>
+        </div>
+
+        <!-- Carousel Section -->
+        <div class="form-group" style="margin-top: 32px; padding-top: 32px; border-top: 2px solid var(--border);">
+          <label for="homepage_carousel_title">
+            Tiêu đề sản phẩm nổi bật <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="homepage_carousel_title"
+            name="homepage_carousel_title"
+            value="<%= settings.homepage_carousel_title || 'Sản phẩm nổi bật' %>"
+            placeholder="Ví dụ: Sản phẩm nổi bật"
+            required
+            maxlength="100"
+          />
+          <span class="form-hint">
+            Tiêu đề cho phần carousel sản phẩm nổi bật
+          </span>
+          <div class="validation-error" id="error_carousel_title"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="homepage_carousel_subtitle">
+            Mô tả sản phẩm nổi bật <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="homepage_carousel_subtitle"
+            name="homepage_carousel_subtitle"
+            value="<%= settings.homepage_carousel_subtitle || 'Khám phá những sản phẩm hot nhất hiện nay' %>"
+            placeholder="Ví dụ: Khám phá những sản phẩm hot nhất hiện nay"
+            required
+            maxlength="200"
+          />
+          <span class="form-hint">
+            Mô tả ngắn cho phần sản phẩm nổi bật
+          </span>
+          <div class="validation-error" id="error_carousel_subtitle"></div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Page Content Section -->
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <div>
+          <h2 class="settings-section-title">Nội dung trang</h2>
+          <p class="settings-section-description">
+            Quản lý nội dung các trang tĩnh. Hỗ trợ HTML hoặc văn bản thuần. Hỗ trợ xuống dòng tự động.
+          </p>
+        </div>
+        <button type="button" class="btn-save-section" onclick="saveSection('pages')" id="btn-save-pages">
+          <span class="btn-text">Lưu</span>
+          <span class="btn-loader" style="display:none;">⏳</span>
+        </button>
+      </div>
+      
+      <form id="form-pages" onsubmit="event.preventDefault(); saveSection('pages');">
+
+        <!-- About Page -->
+        <div class="form-group">
+          <label for="page_about">
+            Trang Giới thiệu <span class="required">*</span>
+            <a href="/about" target="_blank" class="page-link-preview">Xem trang</a>
+          </label>
+          <textarea
+            id="page_about"
+            name="page_about"
+            rows="8"
+            placeholder="Nhập nội dung trang giới thiệu..."
+            required
+          ><%= settings.page_about || '' %></textarea>
+          <span class="form-hint">
+            Nội dung sẽ được hiển thị tại trang /about. Có thể dùng HTML hoặc văn bản thuần.
+          </span>
+          <div class="validation-error" id="error_about"></div>
+        </div>
+
+        <!-- Policy Page -->
+        <div class="form-group">
+          <label for="page_policy">
+            Trang Chính sách <span class="required">*</span>
+            <a href="/policy" target="_blank" class="page-link-preview">Xem trang</a>
+          </label>
+          <textarea
+            id="page_policy"
+            name="page_policy"
+            rows="8"
+            placeholder="Nhập nội dung trang chính sách..."
+            required
+          ><%= settings.page_policy || '' %></textarea>
+          <span class="form-hint">
+            Nội dung sẽ được hiển thị tại trang /policy. Có thể dùng HTML hoặc văn bản thuần.
+          </span>
+          <div class="validation-error" id="error_policy"></div>
+        </div>
+
+        <!-- Payment Page -->
+        <div class="form-group">
+          <label for="page_payment">
+            Trang Thanh toán <span class="required">*</span>
+            <a href="/payment" target="_blank" class="page-link-preview">Xem trang</a>
+          </label>
+          <textarea
+            id="page_payment"
+            name="page_payment"
+            rows="8"
+            placeholder="Nhập nội dung trang thanh toán..."
+            required
+          ><%= settings.page_payment || '' %></textarea>
+          <span class="form-hint">
+            Nội dung sẽ được hiển thị tại trang /payment. Có thể dùng HTML hoặc văn bản thuần.
+          </span>
+          <div class="validation-error" id="error_payment"></div>
+      </div>
+
+        <!-- Contact Page -->
+        <div class="form-group">
+          <label for="page_contact">
+            Trang Liên hệ <span class="required">*</span>
+            <a href="/contact" target="_blank" class="page-link-preview">Xem trang</a>
+          </label>
+          <textarea
+            id="page_contact"
+            name="page_contact"
+            rows="8"
+            placeholder="Nhập nội dung trang liên hệ..."
+            required
+          ><%= settings.page_contact || '' %></textarea>
+          <span class="form-hint">
+            Nội dung sẽ được hiển thị tại trang /contact. Có thể dùng HTML hoặc văn bản thuần.
+          </span>
+          <div class="validation-error" id="error_contact"></div>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const csrfToken = '<%= csrfToken %>';
+let socialItemCounter = Number('<%= (settings.social_media_list && settings.social_media_list.length) ? settings.social_media_list.length : 0 %>');
+
+// Save section via AJAX
+async function saveSection(section) {
+  const btn = document.getElementById(`btn-save-${section}`);
+  const btnText = btn.querySelector('.btn-text');
+  const btnLoader = btn.querySelector('.btn-loader');
+  const form = document.getElementById(`form-${section}`);
+  const sectionEl = form.closest('.settings-section');
+  
+  // Remove existing feedback
+  const existingFeedback = sectionEl.querySelector('.section-feedback');
+  if (existingFeedback) {
+    existingFeedback.remove();
+  }
+  
+  // Disable button and show loading
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  btnLoader.style.display = 'inline-block';
+  
+  try {
+    const formData = new FormData(form);
+    formData.append('section', section);
+    
+    // For social section, build JSON array
+    if (section === 'social') {
+      const socialItems = [];
+      const items = form.querySelectorAll('.social-item');
+      items.forEach(function(item, index) {
+        const nameInput = item.querySelector('.social-name-input');
+        const urlInput = item.querySelector('.social-url-input');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const url = urlInput ? urlInput.value.trim() : '';
+        const iconImg = item.querySelector('img[id*="social-preview"]');
+        let existingIcon = '';
+        if (iconImg && iconImg.src) {
+          const iconSrc = iconImg.src;
+          if (iconSrc.indexOf('/img/icons/') !== -1) {
+            existingIcon = iconSrc.substring(iconSrc.indexOf('/img/icons/'));
+          }
+        }
+        
+        if (name && url) {
+          socialItems.push({
+            name: name,
+            url: url,
+            icon: existingIcon
+          });
+        }
+      });
+      formData.append('social_media_data', JSON.stringify(socialItems));
+    }
+    
+    const response = await fetch('/admin/settings/save', {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showSectionFeedback(sectionEl, 'success', result.message || 'Đã lưu thành công!');
+      // Reload page after 1 second to show updated data
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      showSectionFeedback(sectionEl, 'error', result.message || 'Lỗi khi lưu cài đặt');
+    }
+  } catch (error) {
+    console.error('Error saving section:', error);
+    showSectionFeedback(sectionEl, 'error', 'Lỗi kết nối. Vui lòng thử lại.');
+  } finally {
+    // Re-enable button
+    btn.disabled = false;
+    btnText.style.display = 'inline';
+    btnLoader.style.display = 'none';
+  }
+}
+
+// Add new social media item
+function addSocialItem() {
+  const list = document.getElementById('social-media-list');
+  const index = socialItemCounter++;
+  
+  const item = document.createElement('div');
+  item.className = 'social-item';
+  item.setAttribute('data-index', index);
+  item.innerHTML = `
+    <div class="social-item-header">
+      <h3>Mạng xã hội #${index + 1}</h3>
+      <button type="button" class="btn-remove-social" onclick="removeSocialItem(this)" title="Xóa">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Tên mạng xã hội <span class="required">*</span></label>
+      <input type="text" name="social_name_${index}" placeholder="Ví dụ: Facebook, Zalo, YouTube..." required class="social-name-input" />
+    </div>
+    <div class="form-group">
+      <label>URL liên kết <span class="required">*</span></label>
+      <input type="url" name="social_url_${index}" placeholder="https://..." pattern="https?://.*" required class="social-url-input" />
+    </div>
+    <div class="form-group">
+      <label>Icon</label>
+      <input type="file" name="social_icon_file_${index}" accept="image/*" onchange="previewIcon(this, 'social-preview-${index}')" />
+      <img id="social-preview-${index}" style="display: none; width: 32px; height: 32px; object-fit: contain; border-radius: 4px; border: 1px solid var(--border); margin-top: 8px;" />
+      <span class="form-hint">Upload file ảnh icon từ máy tính</span>
+    </div>
+  `;
+  
+  list.appendChild(item);
+  item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Remove social media item
+function removeSocialItem(el) {
+  const item = el && el.closest ? el.closest('.social-item') : null;
+  if (item && confirm('Bạn có chắc muốn xóa mạng xã hội này?')) {
+    item.remove();
+    // Update numbering
+    updateSocialItemNumbers();
+  }
+}
+
+// Update item numbers
+function updateSocialItemNumbers() {
+  const items = document.querySelectorAll('.social-item');
+  items.forEach((item, idx) => {
+    const header = item.querySelector('.social-item-header h3');
+    if (header) {
+      header.textContent = `Mạng xã hội #${idx + 1}`;
+    }
+  });
+}
+
+function showSectionFeedback(sectionEl, type, message) {
+  // Remove existing feedback
+  const existing = sectionEl.querySelector('.section-feedback');
+  if (existing) {
+    existing.remove();
+  }
+  
+  const feedback = document.createElement('div');
+  feedback.className = `section-feedback ${type}`;
+  feedback.textContent = message;
+  sectionEl.style.position = 'relative';
+  sectionEl.appendChild(feedback);
+  
+  // Auto remove after 3 seconds
+  setTimeout(() => {
+    feedback.style.animation = 'slideInDown 0.3s ease-out reverse';
+    setTimeout(() => feedback.remove(), 300);
+  }, 3000);
+}
+
+function validateForm(event) {
+  let isValid = true;
+  
+  // Clear previous errors
+  document.querySelectorAll('.validation-error').forEach(el => {
+    el.classList.remove('show');
+    el.textContent = '';
+  });
+  document.querySelectorAll('.form-group').forEach(el => {
+    el.classList.remove('has-error');
+  });
+
+  // Validate URLs
+  const urlInputs = document.querySelectorAll('input[type="url"]');
+  urlInputs.forEach(input => {
+    if (input.value.trim() !== '' && !input.value.match(/^https?:\/\/.+/)) {
+      isValid = false;
+      const fieldName = input.name;
+      const errorEl = document.getElementById('error_' + fieldName.replace('social_', '').replace('_icon', ''));
+      if (errorEl) {
+        errorEl.textContent = 'Vui lòng nhập URL hợp lệ (bắt đầu bằng http:// hoặc https://)';
+        errorEl.classList.add('show');
+      }
+      input.closest('.form-group, .social-link-group')?.classList.add('has-error');
+    }
+  });
+
+    // Validate required textareas and inputs
+    const requiredFields = document.querySelectorAll('textarea[required], input[required]');
+    requiredFields.forEach(field => {
+      if (!field.value.trim()) {
+        isValid = false;
+        const fieldName = field.name;
+        let errorId = 'error_' + fieldName.replace('page_', '').replace('homepage_', '').replace('_title', '').replace('_subtitle', '').replace('_features', '');
+        
+        // Special handling for homepage fields
+        if (fieldName.includes('homepage_')) {
+          errorId = 'error_' + fieldName.replace('homepage_', '');
+        }
+        
+        const errorEl = document.getElementById(errorId);
+        if (errorEl) {
+          errorEl.textContent = 'Trường này là bắt buộc';
+          errorEl.classList.add('show');
+        }
+        field.closest('.form-group')?.classList.add('has-error');
+      }
+    });
+
+  if (!isValid) {
+    event.preventDefault();
+    // Scroll to first error
+    const firstError = document.querySelector('.validation-error.show');
+    if (firstError) {
+      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstError.closest('.form-group, .social-link-group')?.querySelector('input, textarea')?.focus();
+    }
+    return false;
+  }
+
+  return true;
+}
+
+function resetForm() {
+  if (confirm('Bạn có chắc chắn muốn đặt lại tất cả các thay đổi? Dữ liệu chưa lưu sẽ bị mất.')) {
+    // Reload page to get fresh data from server
+    window.location.reload();
+  }
+}
+
+// Show notification when page loads with success/error message
+window.addEventListener('DOMContentLoaded', function() {
+  const successMsg = document.querySelector('.success-message');
+  const errorMsg = document.querySelector('.error-message');
+  
+  if (successMsg || errorMsg) {
+    // Scroll to message
+    (successMsg || errorMsg).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Auto-hide success message after 5 seconds
+    if (successMsg) {
+      setTimeout(() => {
+        successMsg.style.opacity = '0';
+        successMsg.style.transform = 'translateY(-20px)';
+        setTimeout(() => successMsg.remove(), 400);
+      }, 5000);
+    }
+  }
+  
+  // Log current settings values for debugging
+  console.log('Settings form loaded. Current values:');
+  document.querySelectorAll('#settings-form input, #settings-form textarea').forEach(field => {
+    if (field.value) {
+      console.log(`  ${field.name}: ${field.value.substring(0, 50)}${field.value.length > 50 ? '...' : ''}`);
+    }
+  });
+});
+
+// Preview icon when file is selected
+function previewIcon(input, previewId) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const previewImg = document.getElementById(previewId);
+      if (previewImg) {
+        previewImg.src = e.target.result;
+        previewImg.style.display = 'block';
+        // Show parent container if exists
+        const parent = previewImg.parentElement;
+        if (parent && parent.tagName === 'DIV') {
+          parent.style.display = 'flex';
+        }
+      }
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// Auto-save draft on input change (optional)
+let saveTimeout;
+document.querySelectorAll('#settings-form input, #settings-form textarea').forEach(el => {
+  el.addEventListener('input', function() {
+    clearTimeout(saveTimeout);
+    // Optional: Add auto-save feature here if needed
+  });
+});
+</script>

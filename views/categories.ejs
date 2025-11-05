@@ -1,0 +1,441 @@
+<div class="categories-page">
+  <div class="page-header">
+    <h1>📁 Tất cả danh mục sản phẩm</h1>
+    <p class="page-subtitle">Khám phá các danh mục sản phẩm đa dạng tại SafeKeyS</p>
+  </div>
+  
+  <% if (!categories || categories.length === 0) { %>
+    <div class="empty-categories">
+      <div class="empty-icon">📂</div>
+      <h3>Chưa có danh mục nào</h3>
+      <p class="muted">Danh mục sẽ được cập nhật sớm.</p>
+      <a href="/" class="btn primary">Về trang chủ</a>
+    </div>
+  <% } else { %>
+    <div class="categories-showcase">
+      <div class="categories-stats">
+        <div class="stat-item">
+          <span class="stat-icon">📦</span>
+          <div class="stat-info">
+            <div class="stat-number"><%= categories.length %></div>
+            <div class="stat-label">Danh mục</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon">🛍️</span>
+          <div class="stat-info">
+            <div class="stat-number"><%= categories.reduce((sum, c) => sum + (parseInt(c.product_count) || 0), 0) %></div>
+            <div class="stat-label">Tổng sản phẩm</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="categories-grid">
+        <% 
+          const categoryIcons = ['🎮', '💻', '🔑', '🎯', '⭐', '🔥', '💎', '🚀', '🎁', '💳', '🎪', '🎨'];
+          const categoryColors = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+            'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+            'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+            'linear-gradient(135deg, #ff8a80 0%, #ea6100 100%)',
+            'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
+            'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)'
+          ];
+          let iconIndex = 0;
+        %>
+        <% categories.forEach((c, index) => { %>
+          <% 
+            const icon = categoryIcons[iconIndex % categoryIcons.length];
+            const color = categoryColors[iconIndex % categoryColors.length];
+            iconIndex++;
+          %>
+          <a href="/category/<%= c.slug %>" class="category-card" style="--category-gradient: <%= color %>">
+            <div class="category-card-bg"></div>
+            <div class="category-icon-wrapper">
+              <div class="category-icon" style="background: <%= color %>">
+                <span class="icon-emoji"><%= icon %></span>
+              </div>
+            </div>
+            <div class="category-content">
+              <h3 class="category-name"><%= c.name %></h3>
+              <div class="category-stats">
+                <div class="category-count">
+                  <span class="count-icon">📦</span>
+                  <span class="count-number"><%= c.product_count || 0 %></span>
+                  <span class="count-label">sản phẩm</span>
+                </div>
+              </div>
+              <div class="category-actions">
+                <span class="view-btn">
+                  Xem tất cả
+                  <span class="arrow">→</span>
+                </span>
+              </div>
+            </div>
+            <div class="category-hover-effect"></div>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<style>
+.categories-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 50px;
+  padding: 40px 0;
+}
+
+.page-header h1 {
+  margin: 0 0 12px 0;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--fg);
+  background: linear-gradient(135deg, var(--green) 0%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.categories-stats {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 40px;
+  justify-content: center;
+}
+
+.stat-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  max-width: 300px;
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  border-color: var(--green);
+}
+
+.stat-icon {
+  font-size: 40px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 163, 74, 0.1);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.category-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+}
+
+.category-card-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: var(--category-gradient);
+  opacity: 0.1;
+  transition: opacity 0.4s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border-color: transparent;
+}
+
+.category-card:hover .category-card-bg {
+  opacity: 0.2;
+}
+
+.category-card:hover .category-hover-effect {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.category-icon-wrapper {
+  padding: 30px 30px 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.category-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-card:hover .category-icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.icon-emoji {
+  font-size: 48px;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  position: relative;
+  z-index: 1;
+}
+
+.category-content {
+  padding: 0 30px 30px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+.category-name {
+  margin: 0 0 20px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fg);
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.category-card:hover .category-name {
+  color: var(--green);
+}
+
+.category-stats {
+  margin-bottom: 20px;
+}
+
+.category-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.count-icon {
+  font-size: 18px;
+}
+
+.count-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.count-label {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.category-actions {
+  margin-top: auto;
+}
+
+.view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--green);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 12px 24px;
+  background: rgba(22, 163, 74, 0.1);
+  border-radius: 10px;
+  width: 100%;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.category-card:hover .view-btn {
+  background: var(--green);
+  color: white;
+  transform: translateX(4px);
+  border-color: var(--green);
+}
+
+.arrow {
+  transition: transform 0.3s ease;
+}
+
+.category-card:hover .arrow {
+  transform: translateX(6px);
+}
+
+.category-hover-effect {
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.6s ease;
+  pointer-events: none;
+}
+
+.empty-categories {
+  text-align: center;
+  padding: 100px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  margin-top: 40px;
+}
+
+.empty-icon {
+  font-size: 100px;
+  margin-bottom: 30px;
+  opacity: 0.5;
+}
+
+.empty-categories h3 {
+  margin: 0 0 16px 0;
+  color: var(--fg);
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.empty-categories .muted {
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+@media (max-width: 1024px) {
+  .categories-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header h1 {
+    font-size: 28px;
+  }
+  
+  .categories-stats {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .stat-item {
+    max-width: 100%;
+  }
+  
+  .categories-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  
+  .category-card {
+    min-height: 240px;
+  }
+  
+  .category-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .icon-emoji {
+    font-size: 36px;
+  }
+  
+  .category-name {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .page-header {
+    padding: 20px 0;
+  }
+  
+  .page-header h1 {
+    font-size: 24px;
+  }
+}
+</style>
+
+

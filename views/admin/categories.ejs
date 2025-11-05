@@ -1,0 +1,281 @@
+<div class="admin-categories">
+  <h1>📁 Quản lý danh mục</h1>
+  
+  <div class="category-form-card">
+    <h2>➕ Thêm danh mục mới</h2>
+    <form action="/admin/categories?_csrf=<%= csrfToken %>" method="post" class="category-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Tên danh mục *</label>
+          <input type="text" id="name" name="name" placeholder="Ví dụ: Game Keys" required />
+        </div>
+        <div class="form-group">
+          <label for="slug">Slug (URL) *</label>
+          <input type="text" id="slug" name="slug" placeholder="game-keys" required />
+          <small class="form-hint">Slug sẽ tự động được tạo từ tên nếu để trống</small>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary large">
+          <span>➕</span>
+          Thêm danh mục
+        </button>
+        <button type="reset" class="btn secondary">
+          <span>🔄</span>
+          Đặt lại
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <div class="categories-list-card">
+    <h2>📋 Danh sách danh mục</h2>
+    <% if (!categories || categories.length === 0) { %>
+      <p class="muted">Chưa có danh mục nào. Hãy thêm danh mục đầu tiên!</p>
+    <% } else { %>
+      <div class="categories-table-wrapper">
+        <table class="categories-table">
+          <thead>
+            <tr>
+              <th>Tên danh mục</th>
+              <th>Slug</th>
+              <th>Số sản phẩm</th>
+              <th class="center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% categories.forEach(c => { %>
+              <tr>
+                <td>
+                  <div class="category-cell">
+                    <span class="category-icon-small">📁</span>
+                    <strong><%= c.name %></strong>
+                  </div>
+                </td>
+                <td>
+                  <code class="slug-code">/<%= c.slug %></code>
+                </td>
+                <td>
+                  <span class="product-count-badge"><%= c.product_count || 0 %> sản phẩm</span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <a class="btn small" href="/admin/categories/<%= c.id %>/edit" title="Sửa">
+                      ✏️
+                    </a>
+                    <a class="btn small" href="/category/<%= c.slug %>" target="_blank" title="Xem">
+                      👁️
+                    </a>
+                    <form action="/admin/categories/<%= c.id %>/delete?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Xóa danh mục này? Sản phẩm trong danh mục sẽ bị gỡ khỏi danh mục.')">
+                      <button class="btn small danger" type="submit" title="Xóa">🗑️</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<style>
+.admin-categories {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.category-form-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+.category-form-card h2 {
+  margin: 0 0 24px 0;
+  font-size: 24px;
+  color: var(--fg);
+  border-bottom: 2px solid var(--green);
+  padding-bottom: 12px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.form-group input {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--fg);
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--green);
+  background: rgba(22, 163, 74, 0.05);
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.form-actions .btn.large {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.categories-list-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+}
+
+.categories-list-card h2 {
+  margin: 0 0 24px 0;
+  font-size: 24px;
+  color: var(--fg);
+  border-bottom: 2px solid var(--green);
+  padding-bottom: 12px;
+}
+
+.categories-table-wrapper {
+  overflow-x: auto;
+}
+
+.categories-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.categories-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--fg);
+  border-bottom: 2px solid var(--border);
+  font-size: 14px;
+}
+
+.categories-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.categories-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.category-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.category-icon-small {
+  font-size: 20px;
+}
+
+.slug-code {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.product-count-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--green);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.action-buttons .btn.small {
+  padding: 6px 10px;
+  font-size: 14px;
+  min-width: 36px;
+}
+
+@media (max-width: 968px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .categories-table-wrapper {
+    overflow-x: scroll;
+  }
+}
+</style>
+
+<script>
+// Auto-generate slug from name
+document.getElementById('name').addEventListener('input', function() {
+  const name = this.value;
+  const slugInput = document.getElementById('slug');
+  
+  if (slugInput.value === '' || slugInput.dataset.autoGenerated === 'true') {
+    const slug = name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+    slugInput.value = slug;
+    slugInput.dataset.autoGenerated = 'true';
+  }
+});
+
+document.getElementById('slug').addEventListener('input', function() {
+  this.dataset.autoGenerated = 'false';
+});
+</script>
+
+

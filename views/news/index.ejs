@@ -1,0 +1,901 @@
+<style>
+/* Professional News Section */
+.news-wrapper {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.news-main-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 40px;
+  padding: 40px 20px;
+}
+
+/* Breadcrumbs */
+.news-breadcrumbs {
+  padding: 20px 20px 0;
+  max-width: 1600px;
+  margin: 0 auto;
+  font-size: 14px;
+  color: var(--muted);
+  animation: fadeIn 0.4s ease-out;
+}
+
+.news-breadcrumbs a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.news-breadcrumbs a:hover {
+  color: var(--green);
+}
+
+.news-breadcrumbs span {
+  margin: 0 8px;
+  color: var(--muted);
+}
+
+/* Header Section */
+.news-header-section {
+  padding: 40px 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 40px;
+}
+
+.news-header-title {
+  font-size: 48px;
+  font-weight: 900;
+  margin: 0 0 12px 0;
+  color: var(--fg);
+  letter-spacing: -1.5px;
+  line-height: 1.2;
+}
+
+.news-header-subtitle {
+  font-size: 18px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* Search & Filter Bar */
+.news-toolbar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 40px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.news-search-form {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  gap: 12px;
+}
+
+.news-search-input {
+  flex: 1;
+  padding: 14px 20px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.news-search-input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+}
+
+.news-search-input::placeholder {
+  color: var(--muted);
+}
+
+.news-search-btn {
+  padding: 14px 28px;
+  background: var(--green);
+  border: 2px solid var(--green);
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.news-search-btn:hover {
+  background: #22c55e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+/* Featured Article */
+.news-featured-section {
+  margin-bottom: 50px;
+}
+
+.news-featured-label {
+  display: inline-block;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, var(--green) 0%, #16a34a 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.news-featured {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.news-featured:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  border-color: var(--green);
+  transform: translateY(-4px);
+}
+
+.news-featured-image-wrapper {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--bg) 0%, rgba(22, 163, 74, 0.03) 100%);
+}
+
+.news-featured-image {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.news-featured:hover .news-featured-image {
+  transform: scale(1.08);
+}
+
+.news-featured-image-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(34, 197, 94, 0.04) 100%);
+}
+
+.news-featured-content {
+  padding: 50px 45px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.news-featured-category {
+  display: inline-block;
+  padding: 6px 12px;
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.news-featured-title {
+  margin: 0 0 20px 0;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--fg);
+  letter-spacing: -0.5px;
+}
+
+.news-featured-title a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.news-featured-title a:hover {
+  color: var(--green);
+}
+
+.news-featured-content-text {
+  color: var(--fg);
+  font-size: 17px;
+  line-height: 1.85;
+  margin: 0 0 24px 0;
+}
+
+.news-featured-content-text p {
+  margin: 0 0 18px 0;
+}
+
+.news-featured-content-text p:last-child {
+  margin-bottom: 0;
+}
+
+.news-featured-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.news-featured-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.news-featured-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--green);
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  padding: 12px 24px;
+  background: rgba(34, 197, 94, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  width: fit-content;
+}
+
+.news-featured-link:hover {
+  gap: 12px;
+  background: rgba(34, 197, 94, 0.15);
+  border-color: var(--green);
+}
+
+.news-featured-link::after {
+  content: '→';
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.news-featured-link:hover::after {
+  transform: translateX(4px);
+}
+
+/* Articles Grid */
+.news-articles-section {
+  margin-bottom: 50px;
+}
+
+.news-section-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 30px 0;
+  color: var(--fg);
+  letter-spacing: -0.5px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--border);
+}
+
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 28px;
+  margin-bottom: 50px;
+}
+
+.news-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.news-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  border-color: var(--green);
+}
+
+.news-card-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--bg) 0%, rgba(22, 163, 74, 0.03) 100%);
+}
+
+.news-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.news-card:hover .news-card-image {
+  transform: scale(1.1);
+}
+
+.news-card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(34, 197, 94, 0.04) 100%);
+}
+
+.news-card-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 14px;
+}
+
+.news-card-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--fg);
+  transition: color 0.3s ease;
+}
+
+.news-card-title a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.news-card-title a:hover {
+  color: var(--green);
+}
+
+.news-card-content-text {
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 1.75;
+  margin: 0;
+  flex: 1;
+}
+
+.news-card-content-text p {
+  margin: 0 0 14px 0;
+}
+
+.news-card-content-text p:last-child {
+  margin-bottom: 0;
+}
+
+.news-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--muted);
+  padding-top: 16px;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+}
+
+.news-card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.news-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin-top: 4px;
+}
+
+.news-card-link:hover {
+  gap: 8px;
+  color: #22c55e;
+}
+
+.news-card-link::after {
+  content: '→';
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.news-card-link:hover::after {
+  transform: translateX(3px);
+}
+
+/* Sidebar */
+.news-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.news-sidebar-widget {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.news-sidebar-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+  color: var(--fg);
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+
+.news-sidebar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.news-sidebar-item {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.news-sidebar-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.news-sidebar-item-image {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.news-sidebar-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.news-sidebar-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 6px 0;
+  color: var(--fg);
+}
+
+.news-sidebar-item-title a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.news-sidebar-item-title a:hover {
+  color: var(--green);
+}
+
+.news-sidebar-item-date {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Pagination */
+.news-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 60px;
+  padding-top: 40px;
+  border-top: 2px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.news-pagination-btn {
+  padding: 10px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 44px;
+  justify-content: center;
+}
+
+.news-pagination-btn:hover:not(.disabled) {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.news-pagination-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.news-pagination-info {
+  color: var(--muted);
+  font-size: 14px;
+  padding: 0 16px;
+  font-weight: 500;
+}
+
+/* Empty State */
+.news-empty {
+  text-align: center;
+  padding: 100px 20px;
+  color: var(--muted);
+}
+
+.news-empty-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  color: var(--fg);
+}
+
+.news-empty-text {
+  font-size: 16px;
+  margin: 0;
+  line-height: 1.7;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .news-main-layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .news-sidebar {
+    order: -1;
+  }
+
+  .news-featured {
+    grid-template-columns: 1fr;
+  }
+
+  .news-featured-image-wrapper {
+    height: 350px;
+  }
+
+  .news-featured-image,
+  .news-featured-image-placeholder {
+    min-height: 350px;
+  }
+
+  .news-featured-content {
+    padding: 40px 35px;
+  }
+}
+
+@media (max-width: 768px) {
+  .news-main-layout {
+    padding: 20px 16px;
+    gap: 30px;
+  }
+
+  .news-header-section {
+    padding: 30px 16px;
+    margin-bottom: 30px;
+  }
+
+  .news-header-title {
+    font-size: 36px;
+  }
+
+  .news-header-subtitle {
+    font-size: 16px;
+  }
+
+  .news-toolbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .news-search-form {
+    width: 100%;
+  }
+
+  .news-featured-content {
+    padding: 30px 24px;
+  }
+
+  .news-featured-title {
+    font-size: 26px;
+  }
+
+  .news-featured-excerpt {
+    font-size: 16px;
+  }
+
+  .news-section-title {
+    font-size: 24px;
+  }
+
+  .news-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .news-sidebar-widget {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-header-title {
+    font-size: 28px;
+  }
+
+  .news-featured-title {
+    font-size: 22px;
+  }
+
+  .news-card-content {
+    padding: 20px;
+  }
+
+  .news-card-title {
+    font-size: 18px;
+  }
+}
+</style>
+
+<div class="news-wrapper">
+  <!-- Breadcrumbs -->
+  <div class="news-breadcrumbs">
+    <a href="/">Trang chủ</a>
+    <span>/</span>
+    <span>Tin tức</span>
+  </div>
+
+  <!-- Header -->
+  <div class="news-header-section">
+    <h1 class="news-header-title">Tin tức</h1>
+    <p class="news-header-subtitle">Cập nhật những tin tức mới nhất về công nghệ, phần mềm và game</p>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="news-main-layout">
+    <!-- Main Content -->
+    <div class="news-main-content">
+      <!-- Search Toolbar -->
+      <form class="news-toolbar" action="/news" method="get">
+        <div class="news-search-form">
+          <input
+            type="text"
+            name="q"
+            class="news-search-input"
+            placeholder="Tìm kiếm bài viết..."
+            value="<%= typeof q !== 'undefined' ? q : '' %>"
+          />
+          <button type="submit" class="news-search-btn">Tìm kiếm</button>
+  <% if (page && page !== 1) { %>
+    <input type="hidden" name="page" value="<%= page %>" />
+  <% } %>
+        </div>
+  </form>
+
+      <!-- Content -->
+      <% if (posts && posts.length > 0) { %>
+        <!-- Featured Article -->
+        <% if (posts.length > 0) { %>
+          <% const featuredPost = posts[0]; %>
+          <div class="news-featured-section">
+            <span class="news-featured-label">Bài viết nổi bật</span>
+            <article class="news-featured">
+              <% if (featuredPost.thumbnail) { %>
+                <div class="news-featured-image-wrapper">
+                  <img
+                    src="<%= featuredPost.thumbnail %>"
+                    alt="<%= featuredPost.title %>"
+                    class="news-featured-image"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
+              <% } else { %>
+                <div class="news-featured-image-wrapper">
+                  <div class="news-featured-image-placeholder"></div>
+                </div>
+              <% } %>
+              
+              <div class="news-featured-content">
+                <span class="news-featured-category">Tin tức</span>
+                <h2 class="news-featured-title">
+                  <a href="/news/<%= featuredPost.slug %>"><%= featuredPost.title %></a>
+                </h2>
+                
+                <div class="news-featured-content-text">
+                  <%= (featuredPost.content || '').replace(/\n/g, '<br/>') %>
+                </div>
+                
+                <div class="news-featured-meta">
+                  <span class="news-featured-meta-item">
+                    <%= new Date(featuredPost.created_at).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                  </span>
+                </div>
+              </div>
+            </article>
+          </div>
+        <% } %>
+
+        <!-- Articles Grid -->
+        <% if (posts.length > 1) { %>
+          <div class="news-articles-section">
+            <h2 class="news-section-title">Bài viết mới nhất</h2>
+            <div class="news-grid">
+              <% posts.slice(1).forEach((p, index) => { %>
+                <article class="news-card">
+        <% if (p.thumbnail) { %>
+                    <div class="news-card-image-wrapper">
+                      <img
+                        src="<%= p.thumbnail %>"
+                        alt="<%= p.title %>"
+                        class="news-card-image"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  <% } else { %>
+                    <div class="news-card-image-wrapper">
+                      <div class="news-card-image-placeholder"></div>
+                    </div>
+        <% } %>
+                  
+                  <div class="news-card-content">
+                    <h3 class="news-card-title">
+                      <a href="/news/<%= p.slug %>"><%= p.title %></a>
+                    </h3>
+                    
+                    <div class="news-card-content-text">
+                      <%= (p.content || '').replace(/\n/g, '<br/>') %>
+                    </div>
+                    
+                    <div class="news-card-meta">
+                      <span class="news-card-meta-item">
+            <%= new Date(p.created_at).toLocaleDateString('vi-VN') %>
+                      </span>
+        </div>
+      </div>
+                </article>
+  <% }) %>
+</div>
+          </div>
+        <% } %>
+
+        <!-- Pagination -->
+        <div class="news-pagination">
+  <% if (page > 1) { %>
+            <a
+              href="/news?<%= q ? ('q=' + encodeURIComponent(q) + '&') : '' %>page=<%= page - 1 %>"
+              class="news-pagination-btn"
+            >
+              ← Trước
+            </a>
+          <% } else { %>
+            <span class="news-pagination-btn disabled">← Trước</span>
+          <% } %>
+          
+          <% if (totalPages && page <= totalPages) { %>
+            <span class="news-pagination-info">
+              Trang <%= page %> / <%= totalPages %>
+            </span>
+  <% } %>
+          
+  <% if (totalPages && page < totalPages) { %>
+            <a
+              href="/news?<%= q ? ('q=' + encodeURIComponent(q) + '&') : '' %>page=<%= page + 1 %>"
+              class="news-pagination-btn"
+            >
+              Sau →
+            </a>
+          <% } else { %>
+            <span class="news-pagination-btn disabled">Sau →</span>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="news-empty">
+          <h2 class="news-empty-title">Không tìm thấy bài viết</h2>
+          <p class="news-empty-text">
+            <% if (typeof q !== 'undefined' && q) { %>
+              Không có bài viết nào khớp với từ khóa "<%= q %>"
+            <% } else { %>
+              Hiện tại chưa có bài viết nào
+            <% } %>
+          </p>
+        </div>
+  <% } %>
+</div>
+
+    <!-- Sidebar -->
+    <aside class="news-sidebar">
+      <div class="news-sidebar-widget">
+        <h3 class="news-sidebar-title">Bài viết mới</h3>
+        <ul class="news-sidebar-list">
+          <% if (posts && posts.length > 0) { %>
+            <% posts.slice(0, 5).forEach(p => { %>
+              <li class="news-sidebar-item">
+                <% if (p.thumbnail) { %>
+                  <img src="<%= p.thumbnail %>" alt="<%= p.title %>" class="news-sidebar-item-image" loading="lazy" />
+                <% } else { %>
+                  <div class="news-sidebar-item-image" style="background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);"></div>
+                <% } %>
+                <div class="news-sidebar-item-content">
+                  <h4 class="news-sidebar-item-title">
+                    <a href="/news/<%= p.slug %>"><%= p.title %></a>
+                  </h4>
+                  <div class="news-sidebar-item-date">
+                    <%= new Date(p.created_at).toLocaleDateString('vi-VN') %>
+                  </div>
+                </div>
+              </li>
+            <% }) %>
+          <% } else { %>
+            <li style="color: var(--muted); padding: 20px 0; text-align: center;">Chưa có bài viết</li>
+          <% } %>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</div>

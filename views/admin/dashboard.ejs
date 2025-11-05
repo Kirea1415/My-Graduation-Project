@@ -1,0 +1,489 @@
+<div class="admin-dashboard">
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div>
+        <h1>📊 Dashboard</h1>
+        <p class="dashboard-subtitle">Tổng quan hệ thống SafeKeyS</p>
+      </div>
+      <div class="header-actions">
+        <a href="/admin/products" class="btn-add-product">
+          <span class="btn-icon">➕</span>
+          <span class="btn-text">Thêm sản phẩm mới</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon products">📦</div>
+      <div class="stat-info">
+        <h3>Sản phẩm</h3>
+        <div class="stat-value"><%= prodCount || 0 %></div>
+        <p class="stat-label">Tổng số sản phẩm</p>
+      </div>
+      <div class="stat-links">
+        <a href="/admin/products" class="stat-link">Quản lý →</a>
+        <a href="/admin/products" class="stat-link-add">
+          <span>➕</span>
+          Thêm mới
+        </a>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon categories">📁</div>
+      <div class="stat-info">
+        <h3>Danh mục</h3>
+        <div class="stat-value"><%= catCount || 0 %></div>
+        <p class="stat-label">Tổng số danh mục</p>
+      </div>
+      <a href="/admin/categories" class="stat-link">Quản lý →</a>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon users">👥</div>
+      <div class="stat-info">
+        <h3>Người dùng</h3>
+        <div class="stat-value"><%= userCount || 0 %></div>
+        <p class="stat-label">Tổng số người dùng</p>
+      </div>
+      <a href="#" class="stat-link">Xem →</a>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon orders">🛒</div>
+      <div class="stat-info">
+        <h3>Đơn hàng</h3>
+        <div class="stat-value"><%= orderCount || 0 %></div>
+        <p class="stat-label">Tổng số đơn hàng</p>
+      </div>
+      <a href="/admin/carts" class="stat-link">Xem →</a>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon revenue">💰</div>
+      <div class="stat-info">
+        <h3>Doanh thu</h3>
+        <div class="stat-value"><%= (totalRevenue || 0).toLocaleString('vi-VN') %> VND</div>
+        <p class="stat-label">Tổng doanh thu</p>
+      </div>
+      <a href="/admin/carts" class="stat-link">Chi tiết →</a>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon stock">📊</div>
+      <div class="stat-info">
+        <h3>Tồn kho</h3>
+        <div class="stat-value"><%= totalStock || 0 %></div>
+        <p class="stat-label">Tổng số lượng tồn</p>
+      </div>
+      <a href="/admin/products" class="stat-link">Quản lý →</a>
+    </div>
+  </div>
+  
+  <div class="dashboard-content">
+    <div class="dashboard-section">
+      <h2>📈 Thống kê nhanh</h2>
+      <div class="quick-stats">
+        <div class="quick-stat-item">
+          <span class="quick-stat-label">Sản phẩm hết hàng:</span>
+          <span class="quick-stat-value error"><%= outOfStockCount || 0 %></span>
+        </div>
+        <div class="quick-stat-item">
+          <span class="quick-stat-label">Sản phẩm còn hàng:</span>
+          <span class="quick-stat-value success"><%= inStockCount || 0 %></span>
+        </div>
+        <div class="quick-stat-item">
+          <span class="quick-stat-label">Đơn hàng hôm nay:</span>
+          <span class="quick-stat-value"><%= todayOrdersCount || 0 %></span>
+        </div>
+        <div class="quick-stat-item">
+          <span class="quick-stat-label">Người dùng mới:</span>
+          <span class="quick-stat-value"><%= newUsersCount || 0 %></span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dashboard-section">
+      <h2>⚡ Thao tác nhanh</h2>
+      <div class="quick-actions">
+        <a href="/admin/products" class="quick-action-btn highlight">
+          <span class="action-icon">➕</span>
+          <span class="action-text">Thêm sản phẩm mới</span>
+        </a>
+        <a href="/admin/categories/new" class="quick-action-btn">
+          <span class="action-icon">📁</span>
+          <span class="action-text">Thêm danh mục</span>
+        </a>
+        <a href="/admin/news/new" class="quick-action-btn">
+          <span class="action-icon">📰</span>
+          <span class="action-text">Thêm tin tức</span>
+        </a>
+        <a href="/admin/settings" class="quick-action-btn">
+          <span class="action-icon">⚙️</span>
+          <span class="action-text">Cài đặt</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.admin-dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  margin-bottom: 30px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.dashboard-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  color: var(--fg);
+}
+
+.dashboard-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.header-actions {
+  flex-shrink: 0;
+}
+
+.btn-add-product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.btn-add-product:hover {
+  background: var(--green-700);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
+}
+
+.btn-icon {
+  font-size: 20px;
+}
+
+.btn-text {
+  font-weight: 600;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--green);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-color: var(--green);
+}
+
+.stat-card:hover::before {
+  transform: scaleX(1);
+}
+
+.stat-icon {
+  font-size: 48px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.stat-icon.products {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.stat-icon.categories {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.stat-icon.users {
+  background: rgba(236, 72, 153, 0.1);
+  color: #ec4899;
+}
+
+.stat-icon.orders {
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--green);
+}
+
+.stat-icon.revenue {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.stat-icon.stock {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.stat-label {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.stat-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.stat-link {
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.stat-link:hover {
+  color: var(--green-700);
+  transform: translateX(4px);
+}
+
+.stat-link-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--green);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.stat-link-add:hover {
+  background: var(--green-700);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.dashboard-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.dashboard-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.dashboard-section h2 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: var(--fg);
+  border-bottom: 2px solid var(--green);
+  padding-bottom: 12px;
+}
+
+.quick-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.quick-stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.quick-stat-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.quick-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.quick-stat-value.success {
+  color: #10b981;
+}
+
+.quick-stat-value.error {
+  color: #ef4444;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--fg);
+  transition: all 0.2s;
+}
+
+.quick-action-btn:hover {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: var(--green);
+  transform: translateY(-2px);
+}
+
+.quick-action-btn.highlight {
+  background: rgba(22, 163, 74, 0.15);
+  border-color: var(--green);
+  border-width: 2px;
+  font-weight: 600;
+}
+
+.quick-action-btn.highlight:hover {
+  background: rgba(22, 163, 74, 0.25);
+}
+
+.action-icon {
+  font-size: 24px;
+}
+
+.action-text {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+@media (max-width: 968px) {
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-actions {
+    width: 100%;
+  }
+  
+  .btn-add-product {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+  }
+  
+  .dashboard-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .stat-info {
+    text-align: center;
+  }
+}
+</style>
+
+
