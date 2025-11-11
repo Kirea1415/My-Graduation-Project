@@ -1,0 +1,15 @@
+{
+  "ignore": [
+    "data/*.json",
+    "data/*.js",
+    "*.log",
+    "node_modules"
+  ],
+  "watch": [
+    "server.js",
+    "views/**/*.ejs",
+    "public/**/*"
+  ],
+  "ext": "js,ejs,css,html"
+}
+

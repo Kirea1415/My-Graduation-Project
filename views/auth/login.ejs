@@ -2,50 +2,117 @@
   <div class="login-card">
     <h1>Đăng nhập</h1>
     
-    <% if (typeof hasGoogleAuth !== 'undefined' && hasGoogleAuth) { %>
-      <a href="/auth/google" class="btn google-btn">
-        <span class="google-icon">🔵</span>
-        <span>Đăng nhập bằng Google</span>
-      </a>
-      <div class="divider">
-        <span>hoặc</span>
+    <% if (typeof flash !== 'undefined' && flash.error && flash.error.length) { %>
+      <div class="login-error-message">
+        <% flash.error.forEach(msg => { %>
+          <div class="error-text"><%= msg.replace(/\n/g, '<br/>') %></div>
+        <% }) %>
       </div>
     <% } %>
     
-    <form action="/login?_csrf=<%= csrfToken %>" method="post" class="login-form">
-      <input type="hidden" name="redirect" value="<%= typeof redirect !== 'undefined' ? redirect : '/' %>" />
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input 
-          id="email" 
-          name="email" 
-          type="email" 
-          required 
-          placeholder="your@email.com"
-          autocomplete="email"
-          aria-label="Email đăng nhập"
-        />
+    <% if (typeof flash !== 'undefined' && flash.success && flash.success.length) { %>
+      <div class="login-success-message">
+        <% flash.success.forEach(msg => { %> 
+          <div class="success-text"><%= msg %></div>
+        <% }) %>
       </div>
-      <div class="form-group">
-        <label for="password">Mật khẩu</label>
-        <input 
-          id="password" 
-          name="password" 
-          type="password" 
-          required 
-          placeholder="••••••••"
-          autocomplete="current-password"
-          aria-label="Mật khẩu"
-        />
+    <% } %>
+
+    <!-- Admin Backup Password Form (only shown when admin is locked) -->
+    <% if (typeof showBackupForm !== 'undefined' && showBackupForm && adminLockedEmail) { %>
+      <div class="backup-password-section">
+        <div class="backup-header">
+          <div class="lock-icon">🔒</div>
+          <h2>Tài khoản admin đã bị khóa</h2>
+          <p class="backup-subtitle">Nhập mã dự phòng để đăng nhập</p>
+        </div>
+        
+        <form action="/login/backup-password?_csrf=<%= csrfToken %>" method="post" class="backup-form">
+          <input type="hidden" name="redirect" value="<%= typeof redirect !== 'undefined' ? redirect : '/' %>" />
+          <input type="hidden" name="email" value="<%= adminLockedEmail %>" />
+          
+          <div class="form-group">
+            <label for="backup_password">Mã dự phòng</label>
+            <input 
+              type="password" 
+              id="backup_password" 
+              name="backup_password" 
+              required 
+              placeholder="Nhập mã dự phòng"
+              autocomplete="off"
+              autofocus
+              class="backup-input"
+              aria-label="Mã dự phòng"
+            />
+            <small class="form-hint">Mã dự phòng chỉ dành cho tài khoản admin</small>
+          </div>
+          
+          <button class="btn primary full" type="submit">Đăng nhập bằng mã dự phòng</button>
+          
+          <div class="backup-footer">
+            <button type="button" class="btn-link" onclick="showNormalLogin()">Quay lại đăng nhập bình thường</button>
+          </div>
+        </form>
       </div>
-      <button class="btn primary full" type="submit">Đăng nhập</button>
-    </form>
-    
-    <div class="login-footer">
-      <p class="muted">Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
+    <% } %>
+
+    <!-- Normal Login Form (hidden when backup form is shown) -->
+    <% const hideNormalLogin = (typeof showBackupForm !== 'undefined' && showBackupForm); %>
+    <div class="normal-login-section" id="normalLoginSection"<% if (hideNormalLogin) { %> style="display: none;"<% } %>>
+      <% if (typeof hasGoogleAuth !== 'undefined' && hasGoogleAuth) { %>
+        <a href="/auth/google" class="btn google-btn">
+          <span class="google-icon">🔵</span>
+          <span>Đăng nhập bằng Google</span>
+        </a>
+        <div class="divider">
+          <span>hoặc</span>
+        </div>
+      <% } %>
+      
+      <form action="/login?_csrf=<%= csrfToken %>" method="post" class="login-form">
+        <input type="hidden" name="redirect" value="<%= typeof redirect !== 'undefined' ? redirect : '/' %>" />
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input 
+            id="email" 
+            name="email" 
+            type="email" 
+            required 
+            placeholder="your@email.com"
+            autocomplete="email"
+            aria-label="Email đăng nhập"
+            value="<%= typeof adminLockedEmail !== 'undefined' && adminLockedEmail ? adminLockedEmail : '' %>"
+          />
+        </div>
+        <div class="form-group">
+          <label for="password">Mật khẩu</label>
+          <input 
+            id="password" 
+            name="password" 
+            type="password" 
+            required 
+            placeholder="••••••••"
+            autocomplete="current-password"
+            aria-label="Mật khẩu"
+          />
+        </div>
+        <button class="btn primary full" type="submit">Đăng nhập</button>
+      </form>
+      
+      <div class="login-footer">
+        <p class="muted">Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+function showNormalLogin() {
+  document.getElementById('normalLoginSection').style.display = 'block';
+  document.querySelector('.backup-password-section').style.display = 'none';
+  document.getElementById('email')?.focus();
+}
+</script>
 
 <style>
 .login-container {
@@ -68,6 +135,72 @@
   color: var(--fg);
 }
 
+/* Backup Password Section */
+.backup-password-section {
+  margin-top: 20px;
+  padding: 24px;
+  background: rgba(239, 68, 68, 0.05);
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+}
+
+.backup-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.lock-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.backup-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: var(--fg);
+}
+
+.backup-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.backup-form {
+  margin-top: 20px;
+}
+
+.backup-input {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.backup-footer {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--green);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+}
+
+.btn-link:hover {
+  color: #15803d;
+}
+
+/* Normal Login Section */
+.normal-login-section {
+  margin-top: 20px;
+}
+
 .google-btn {
   width: 100%;
   display: flex;
@@ -81,6 +214,8 @@
   margin-bottom: 24px;
   font-weight: 600;
   transition: all 0.2s;
+  text-decoration: none;
+  border-radius: 8px;
 }
 
 .google-btn:hover {
@@ -143,6 +278,7 @@
   font-size: 15px;
   font-family: inherit;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .form-group input:focus {
@@ -150,6 +286,13 @@
   border-color: var(--green);
   background: rgba(22, 163, 74, 0.05);
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .login-footer {
@@ -169,11 +312,63 @@
   text-decoration: underline;
 }
 
+.login-error-message {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.login-error-message .error-text {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.login-success-message {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 2px solid rgba(22, 163, 74, 0.3);
+  border-radius: 8px;
+  color: #10b981;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.login-success-message .success-text {
+  margin: 0;
+}
+
+.btn.primary.full {
+  width: 100%;
+  padding: 14px 20px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn.primary.full:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
 @media (max-width: 768px) {
   .login-card {
     padding: 30px 20px;
   }
+  
+  .backup-password-section {
+    padding: 20px;
+  }
 }
 </style>
-
-

@@ -1,0 +1,80 @@
+[
+  {
+    "id": 1,
+    "email": "admin@safekeys.local",
+    "password_hash": "$2b$10$Io5SghOlEG0sCrFHdfiksusHfTuu1Rb6MK69Ec4Ml4Qozl.uQAPR.",
+    "name": "Admin Tester",
+    "role": "admin",
+    "google_id": null,
+    "avatar": "/img/avatars/avatar_1_1762853243849.jpg",
+    "phone": null,
+    "address": null,
+    "created_at": "2025-09-24T20:47:59.000Z",
+    "updated_at": "2025-11-11T09:27:23.861Z"
+  },
+  {
+    "id": 2,
+    "email": "user@safekeys.local",
+    "password_hash": "$2b$10$AEHjE.SORVs1KzKJJO1oSe7ZZ8vaVC7T.5vaTDfbm2eDqghnNAGaa",
+    "name": "User",
+    "role": "customer",
+    "google_id": null,
+    "avatar": "/img/avatars/avatar_2_1762747934110.png",
+    "phone": null,
+    "address": null,
+    "created_at": "2025-09-24T20:47:59.000Z",
+    "updated_at": "2025-11-10T04:12:15.743Z"
+  },
+  {
+    "id": 3,
+    "email": "fuoahf@gmail.com",
+    "password_hash": "$2b$10$kXKjqXzN/TdtQJAVzHSZQeY9ezdUaB7XgMcZhOfD9nfO4jrBCzytS",
+    "name": "24GAWV",
+    "role": "customer",
+    "google_id": null,
+    "avatar": null,
+    "phone": null,
+    "address": null,
+    "created_at": "2025-11-10T04:12:20.899Z",
+    "updated_at": "2025-11-10T04:12:20.899Z"
+  },
+  {
+    "id": 4,
+    "email": "testdk@gmail.com",
+    "password_hash": "$2b$10$MunkI4G/lDD9ouVCAZkhLusJ2E41/ZCQb2ABDWa6.qnnkaWKJMlm2",
+    "name": "TESTER",
+    "role": "customer",
+    "google_id": null,
+    "avatar": null,
+    "phone": null,
+    "address": null,
+    "created_at": "2025-11-11T08:25:55.438Z",
+    "updated_at": "2025-11-11T08:27:11.113Z"
+  },
+  {
+    "id": 7,
+    "email": "huyhut478@gmail.com",
+    "password_hash": "$2b$10$/9EqPhpm1qDAraYQmcTY5.IR.AWer8KQv3Xa9WaDWVm/GtClzFyBW",
+    "name": "huy",
+    "role": "customer",
+    "google_id": null,
+    "avatar": "/img/avatars/avatar_7_1762748130995.png",
+    "phone": null,
+    "address": null,
+    "created_at": "2025-10-30T17:44:55.000Z",
+    "updated_at": "2025-11-10T04:15:30.999Z"
+  },
+  {
+    "id": 8,
+    "email": "lnmthuong0110@gmail.com",
+    "password_hash": "$2b$10$42/feyXIVlpIx.juqhcpi.iJSzv43tKv4vw7NsoDL8TP..uegqJ1m",
+    "name": "aleyy",
+    "role": "customer",
+    "google_id": null,
+    "avatar": null,
+    "phone": null,
+    "address": null,
+    "created_at": "2025-10-30T18:01:45.000Z",
+    "updated_at": null
+  }
+]

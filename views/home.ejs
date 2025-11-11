@@ -155,11 +155,11 @@
                         <div class="carousel-product-buttons">
                           <% if (p.stock > 0) { %>
                             <% if (currentUser) { %>
-                              <button class="btn-buy-now" onclick="addToCart(<%= p.id %>, true, '<%= csrfToken %>')" type="button">
+                              <button class="btn-buy-now" data-product-id="<%- p.id %>" data-buy-now="true" data-csrf="<%- csrfToken %>" type="button">
                                 <span class="btn-icon">⚡</span>
                                 <span class="btn-text">Mua ngay</span>
                               </button>
-                              <button class="btn-add-cart" onclick="addToCart(<%= p.id %>, false, '<%= csrfToken %>')" type="button" title="Thêm vào giỏ hàng">
+                              <button class="btn-add-cart" data-product-id="<%- p.id %>" data-buy-now="false" data-csrf="<%- csrfToken %>" type="button" title="Thêm vào giỏ hàng">
                                 <span class="btn-icon">🛒</span>
                               </button>
                             <% } else { %>
@@ -301,18 +301,18 @@
           </div>
           <div class="product-actions">
             <% if (currentUser) { %>
-              <button class="btn wishlist-btn" onclick="toggleWishlist(<%= p.id %>, '<%= csrfToken %>')" type="button" title="Thêm vào danh sách yêu thích" data-product-id="<%= p.id %>">
+              <button class="btn wishlist-btn" data-product-id="<%- p.id %>" data-csrf="<%- csrfToken %>" type="button" title="Thêm vào danh sách yêu thích">
                 <span>❤️</span>
               </button>
             <% } %>
             
             <% if (p.stock > 0) { %>
               <% if (currentUser) { %>
-                <button class="btn primary" onclick="addToCart(<%= p.id %>, true, '<%= csrfToken %>')" type="button">
+                <button class="btn primary" data-product-id="<%- p.id %>" data-buy-now="true" data-csrf="<%- csrfToken %>" type="button">
                   <span>⚡</span>
                   Mua ngay
                 </button>
-                <button class="btn" onclick="addToCart(<%= p.id %>, false, '<%= csrfToken %>')" type="button">
+                <button class="btn" data-product-id="<%- p.id %>" data-buy-now="false" data-csrf="<%- csrfToken %>" type="button">
                   <span>🛒</span>
                   Thêm giỏ
                 </button>
@@ -2027,18 +2027,110 @@
   }
   
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  
+  .product-card {
+    border-radius: 12px;
+  }
+  
+  .product-image {
+    height: 140px;
+  }
+  
+  .product-info {
+    padding: 12px;
+  }
+  
+  .product-title {
+    font-size: 14px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  
+  .product-description {
+    font-size: 12px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  
+  .product-stock {
+    font-size: 11px;
+    padding: 4px 8px;
+    margin-bottom: 10px;
   }
   
   .product-footer {
     flex-direction: column;
     align-items: stretch;
+    gap: 8px;
+  }
+  
+  .product-price .price {
+    font-size: 16px;
+  }
+  
+  .product-actions {
+    flex-direction: column;
+    gap: 6px;
   }
   
   .product-actions .btn {
     width: 100%;
     justify-content: center;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .quick-view {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .product-image {
+    height: 120px;
+  }
+  
+  .product-info {
+    padding: 10px;
+  }
+  
+  .product-title {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  
+  .product-description {
+    font-size: 11px;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .product-stock {
+    font-size: 10px;
+    padding: 3px 6px;
+    margin-bottom: 8px;
+  }
+  
+  .product-price .price {
+    font-size: 14px;
+  }
+  
+  .product-actions .btn {
+    padding: 7px 10px;
+    font-size: 11px;
   }
 }
 </style>
@@ -2527,39 +2619,41 @@ async function toggleWishlist(productId, csrfToken) {
 // Add to cart via AJAX
 async function addToCart(productId, buyNow = false, csrfToken) {
   // Disable button during request
-  const buttons = document.querySelectorAll(`[onclick*="addToCart(${productId}"]`);
+  const buttons = document.querySelectorAll(`[data-product-id="${productId}"][data-buy-now], [data-product-id="${productId}"].btn-buy-now, [data-product-id="${productId}"].btn-add-cart`);
   buttons.forEach(btn => {
     btn.disabled = true;
     btn.style.opacity = '0.6';
   });
   
   try {
-    // Use FormData to properly send CSRF token
-    const formData = new FormData();
-    formData.append('_csrf', csrfToken);
-    
+    // Send as JSON (API route doesn't need CSRF, uses requireAuth)
     const response = await fetch(`/api/cart/add/${productId}`, {
       method: 'POST',
-      body: formData,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        buy_now: buyNow
+      }),
       credentials: 'same-origin'
     });
     
     const data = await response.json();
     
     if (data.success) {
-      // Update cart badge
-      updateCartBadge(data.cart.totalQty);
+      // If buy now, redirect immediately without adding to cart
+      if (buyNow && data.buyNow) {
+        window.location.href = data.redirect || '/checkout?buy_now=1';
+        return; // Don't re-enable buttons if redirecting
+      }
+      
+      // Update cart badge (only if not buy now)
+      if (data.cart) {
+        updateCartBadge(data.cart.totalQty);
+      }
       
       // Show success message
       showToast(data.message, 'success');
-      
-      // If buy now, redirect to checkout after a short delay
-      if (buyNow) {
-        setTimeout(() => {
-          window.location.href = '/checkout';
-        }, 800);
-        return; // Don't re-enable buttons if redirecting
-      }
     } else {
       // Show error message
       showToast(data.message, 'error');
@@ -2699,6 +2793,25 @@ async function applyFilters() {
 
 // Initialize filters from URL params
 document.addEventListener('DOMContentLoaded', function() {
+  // Event listeners for add to cart buttons
+  document.querySelectorAll('[data-product-id][data-buy-now], .btn-buy-now[data-product-id], .btn-add-cart[data-product-id]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const productId = parseInt(this.getAttribute('data-product-id'));
+      const buyNow = this.getAttribute('data-buy-now') === 'true';
+      const csrfToken = this.getAttribute('data-csrf');
+      addToCart(productId, buyNow, csrfToken);
+    });
+  });
+  
+  // Event listeners for wishlist buttons
+  document.querySelectorAll('.wishlist-btn[data-product-id]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const productId = parseInt(this.getAttribute('data-product-id'));
+      const csrfToken = this.getAttribute('data-csrf');
+      toggleWishlist(productId, csrfToken);
+    });
+  });
+  
   const urlParams = new URLSearchParams(window.location.search);
   
   const sortSelect = document.getElementById('sort');

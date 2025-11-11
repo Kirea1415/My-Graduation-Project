@@ -53,21 +53,42 @@
       <div class="container">
         <!-- Hàng 1: Brand, Search, Auth + Cart -->
         <div class="nav nav-top">
+          <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu" id="mobile-menu-btn">
+            ☰
+          </button>
           <a href="/" class="brand"><span class="dot"></span> SafeKeyS</a>
         <form class="search-form search" action="/" method="get" role="search">
-          <input type="text" name="q" placeholder="Tìm kiếm sản phẩm..." value="<%= typeof q !== 'undefined' ? q : '' %>" aria-label="Tìm kiếm sản phẩm" />
+          <input type="text" name="q" placeholder="Tìm kiếm..." value="<%= typeof q !== 'undefined' ? q : '' %>" aria-label="Tìm kiếm sản phẩm" />
           <button type="submit" aria-label="Tìm kiếm">Tìm</button>
         </form>
           <div class="nav-user">
-            <% if (currentUser) { %>
+            <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+              <div class="user-greeting-top">
+                <% if (currentUser.avatar) { %>
+                  <% 
+                    // Add cache-busting timestamp for local avatars
+                    let avatarUrlHeader = currentUser.avatar;
+                    if (!currentUser.avatar.startsWith('http') && !currentUser.avatar.startsWith('https')) {
+                      // Add timestamp to bypass browser cache
+                      avatarUrlHeader = currentUser.avatar + (currentUser.avatar.includes('?') ? '&' : '?') + 't=' + Date.now();
+                    }
+                  %>
+                  <img src="<%= avatarUrlHeader %>" alt="<%= currentUser.name || 'User' %>" class="user-avatar-small" />
+                <% } else { %>
+                  <div class="user-avatar-placeholder">
+                    <span><%= ((currentUser && currentUser.name) ? currentUser.name : 'U').charAt(0).toUpperCase() %></span>
+                  </div>
+                <% } %>
+                <span class="user-name-top"><%= currentUser.name || 'User' %></span>
+              </div>
               <div class="user-actions">
               <a href="/wishlist" class="btn wishlist-btn-header" title="Danh sách yêu thích" aria-label="Danh sách yêu thích">
                 <span aria-hidden="true">❤️</span>
                 <span class="wishlist-text">Yêu thích</span>
               </a>
-                <a href="/orders" class="btn">Đơn hàng</a>
+                <a href="/orders" class="btn">Lịch sử giao dịch</a>
                 <a href="/profile" class="btn">Hồ sơ</a>
-                <form action="/logout?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn đăng xuất?')" style="margin:0">
+                <form action="/logout?_csrf=<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn đăng xuất?')" style="margin:0">
                   <button class="btn">Đăng xuất</button>
                 </form>
               </div>
@@ -81,9 +102,9 @@
           <a class="btn cart-btn" href="/cart" aria-label="Giỏ hàng" title="Giỏ hàng" id="cart-link">
             <span class="cart-icon" aria-hidden="true">🛒</span>
             <span class="cart-text">Giỏ hàng</span>
-            <% if (currentUser && typeof cart !== 'undefined' && cart.totalQty && cart.totalQty > 0) { %>
+            <% if (typeof currentUser !== 'undefined' && currentUser && typeof cart !== 'undefined' && cart && cart.totalQty && cart.totalQty > 0) { %>
               <span class="cart-badge" id="cart-badge" aria-label="Số lượng sản phẩm trong giỏ: <%= cart.totalQty %>"><%= cart.totalQty %></span>
-            <% } else if (currentUser) { %>
+            <% } else if (typeof currentUser !== 'undefined' && currentUser) { %>
               <span class="cart-badge" id="cart-badge" style="display: none;" aria-label="Số lượng sản phẩm trong giỏ: 0">0</span>
             <% } %>
           </a>
@@ -91,7 +112,7 @@
         </div>
         
         <!-- Hàng 2: Navigation Links + Admin Menu -->
-        <div class="nav nav-bottom">
+        <div class="nav nav-bottom" id="mobile-menu">
           <div class="nav-links">
             <a class="btn" href="/categories">Danh mục</a>
             <a class="btn" href="/news">Tin tức</a>
@@ -99,21 +120,15 @@
             <a class="btn" href="/policy">Chính sách</a>
           </div>
           
-          <% if (currentUser) { %>
+          <% if (typeof currentUser !== 'undefined' && currentUser) { %>
             <div class="user-info">
-              <div class="user-greeting">
-                <% if (currentUser.avatar) { %>
-                  <img src="<%= currentUser.avatar %>" alt="<%= currentUser.name %>" class="user-avatar-small" />
-                <% } %>
-                <span class="user-name">Xin chào, <%= currentUser.name %></span>
-              </div>
               <% if (currentUser.role === 'admin') { %>
                 <div class="admin-menu">
                   <a href="/admin" class="btn admin">Admin</a>
                   <a href="/admin/products" class="btn admin">Sản phẩm</a>
                   <a href="/admin/categories" class="btn admin">Danh mục</a>
+                  <a href="/admin/orders" class="btn admin">Đơn hàng</a>
                   <a href="/admin/news" class="btn admin">Tin tức</a>
-                  <a href="/admin/carts" class="btn admin">Giỏ hàng</a>
                   <a href="/admin/settings" class="btn admin">Cài đặt</a>
                 </div>
               <% } %>
@@ -123,10 +138,10 @@
       </div>
     </header>
     <main id="main-content" class="container">
-      <% if (flash.success && flash.success.length) { %>
+      <% if (typeof flash !== 'undefined' && flash && flash.success && flash.success.length) { %>
         <div class="flash success"><%= flash.success.join('<br/>') %></div>
       <% } %>
-      <% if (flash.error && flash.error.length) { %>
+      <% if (typeof flash !== 'undefined' && flash && flash.error && flash.error.length) { %>
         <div class="flash error"><%= flash.error.join('<br/>') %></div>
       <% } %>
       <%- body %>
@@ -160,6 +175,39 @@
         </div>
       </div>
     </footer>
+    
+    <script>
+      function toggleMobileMenu() {
+        const menu = document.getElementById('mobile-menu');
+        const btn = document.getElementById('mobile-menu-btn');
+        if (menu) {
+          menu.classList.toggle('mobile-open');
+          if (btn) {
+            btn.textContent = menu.classList.contains('mobile-open') ? '✕' : '☰';
+          }
+        }
+      }
+      
+      // Close mobile menu when clicking outside
+      document.addEventListener('click', function(e) {
+        const menu = document.getElementById('mobile-menu');
+        const btn = document.getElementById('mobile-menu-btn');
+        if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+          menu.classList.remove('mobile-open');
+          if (btn) btn.textContent = '☰';
+        }
+      });
+      
+      // Close mobile menu on window resize (if becomes desktop)
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 900) {
+          const menu = document.getElementById('mobile-menu');
+          const btn = document.getElementById('mobile-menu-btn');
+          if (menu) menu.classList.remove('mobile-open');
+          if (btn) btn.textContent = '☰';
+        }
+      });
+    </script>
   </body>
   </html>
 

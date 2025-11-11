@@ -1,0 +1,426 @@
+<div class="admin-lockout-settings">
+  <div class="settings-header">
+    <h1>🔒 Cài đặt khóa tài khoản</h1>
+    <p class="header-subtitle">Quản lý cài đặt khóa tài khoản khi nhập sai mật khẩu</p>
+  </div>
+
+  <% if (typeof flash !== 'undefined' && flash.success && flash.success.length) { %>
+    <div class="success-message">
+      <%= flash.success.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <% if (typeof flash !== 'undefined' && flash.error && flash.error.length) { %>
+    <div class="error-message">
+      <%= flash.error.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <!-- Lockout Settings Form -->
+  <div class="settings-section">
+    <div class="settings-section-header">
+      <h2>Cài đặt khóa tài khoản</h2>
+      <p class="section-description">
+        Cấu hình số lần thử tối đa, thời gian khóa và thông báo khi tài khoản bị khóa.
+      </p>
+    </div>
+
+    <form method="POST" action="/admin/lockout-settings" class="settings-form">
+      <div class="form-group">
+        <label for="max_attempts">
+          Số lần thử tối đa <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          id="max_attempts"
+          name="max_attempts"
+          value="<%= maxAttempts || 3 %>"
+          min="1"
+          max="10"
+          required
+          class="form-input"
+        />
+        <small class="form-hint">Số lần nhập sai mật khẩu trước khi bị khóa (1-10 lần)</small>
+      </div>
+
+      <div class="form-group">
+        <label for="duration_minutes">
+          Thời gian khóa (phút) <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          id="duration_minutes"
+          name="duration_minutes"
+          value="<%= durationMinutes || 5 %>"
+          min="1"
+          max="1440"
+          required
+          class="form-input"
+        />
+        <small class="form-hint">Thời gian khóa tài khoản sau khi nhập sai quá số lần cho phép (1-1440 phút = 24 giờ)</small>
+      </div>
+
+      <div class="form-group">
+        <label for="reason">
+          Lý do khóa <span class="required">*</span>
+        </label>
+        <textarea
+          id="reason"
+          name="reason"
+          rows="3"
+          required
+          class="form-textarea"
+          placeholder="Nhập lý do khóa tài khoản..."
+        ><%= reason || 'Tài khoản đã bị khóa do nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau.' %></textarea>
+        <small class="form-hint">Thông báo hiển thị khi tài khoản bị khóa</small>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn primary">💾 Lưu cài đặt</button>
+        <a href="/admin" class="btn secondary">← Quay lại Admin</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Locked Accounts List -->
+  <div class="locked-accounts-section">
+    <h2>🔒 Tài khoản đang bị khóa</h2>
+    <p class="section-description">
+      Danh sách các tài khoản đang bị khóa do nhập sai mật khẩu quá nhiều lần.
+    </p>
+
+    <% if (!lockedAccounts || lockedAccounts.length === 0) { %>
+      <div class="empty-state">
+        <p>Không có tài khoản nào đang bị khóa</p>
+      </div>
+    <% } else { %>
+      <div class="locked-accounts-list">
+        <% lockedAccounts.forEach(account => { %>
+          <div class="locked-account-card">
+            <div class="account-info">
+              <div class="account-email">
+                <strong>📧 <%= account.email %></strong>
+              </div>
+              <div class="account-details">
+                <span class="detail-item">
+                  <span class="detail-label">⏰ Còn lại:</span>
+                  <span class="detail-value"><%= account.remainingMinutes %> phút</span>
+                </span>
+                <span class="detail-item">
+                  <span class="detail-label">📅 Khóa đến:</span>
+                  <span class="detail-value"><%= account.lockedUntil %></span>
+                </span>
+                <span class="detail-item">
+                  <span class="detail-label">📝 Lý do:</span>
+                  <span class="detail-value"><%= account.reason %></span>
+                </span>
+              </div>
+            </div>
+            <div class="account-actions">
+              <form action="/admin/users/<%= encodeURIComponent(account.email) %>/unlock?_csrf=<%= csrfToken %>" method="post" style="display:inline;" onsubmit="return confirm('Mở khóa tài khoản <%= account.email %>?')">
+                <button type="submit" class="btn-unlock">🔓 Mở khóa</button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Admin Backup Password Info -->
+  <div class="info-section">
+    <h3>🔑 Mật khẩu dự phòng cho Admin</h3>
+    <div class="info-box">
+      <p><strong>Mật khẩu dự phòng:</strong> <code class="backup-password">141514</code></p>
+      <p class="info-text">
+        Tài khoản admin có thể sử dụng mật khẩu dự phòng <code>141514</code> để đăng nhập ngay cả khi tài khoản bị khóa.
+        Sau khi đăng nhập bằng mật khẩu dự phòng, khóa tài khoản sẽ tự động được gỡ bỏ.
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+.admin-lockout-settings {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.settings-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.settings-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  color: var(--fg);
+}
+
+.header-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.success-message,
+.error-message {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.success-message {
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  color: #10b981;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.settings-section,
+.locked-accounts-section,
+.info-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+.settings-section-header {
+  margin-bottom: 24px;
+}
+
+.settings-section-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: var(--fg);
+}
+
+.section-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.settings-form {
+  margin-top: 20px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-group .required {
+  color: #ef4444;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.locked-accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.locked-account-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: rgba(239, 68, 68, 0.05);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  gap: 20px;
+}
+
+.account-info {
+  flex: 1;
+}
+
+.account-email {
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: var(--fg);
+}
+
+.account-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-item {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.detail-label {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.detail-value {
+  color: var(--fg);
+}
+
+.account-actions {
+  flex-shrink: 0;
+}
+
+.btn-unlock {
+  padding: 10px 20px;
+  background: #10b981;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-unlock:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.info-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: var(--fg);
+}
+
+.info-box {
+  padding: 20px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+}
+
+.info-box p {
+  margin: 0 0 12px 0;
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.info-box p:last-child {
+  margin-bottom: 0;
+}
+
+.backup-password {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.info-text {
+  color: var(--muted) !important;
+  font-size: 13px !important;
+}
+
+@media (max-width: 768px) {
+  .admin-lockout-settings {
+    padding: 15px;
+  }
+
+  .settings-section,
+  .locked-accounts-section,
+  .info-section {
+    padding: 20px;
+  }
+
+  .locked-account-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .account-actions {
+    width: 100%;
+  }
+
+  .btn-unlock {
+    width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+  }
+}
+</style>
+

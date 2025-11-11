@@ -1,69 +1,512 @@
- 
-<h1>Quản lý Tin tức</h1>
-<div class="grid">
-  <div class="card"><div class="p">
-    <h3>Thêm bài viết</h3>
-    <form action="/admin/news?_csrf=<%= csrfToken %>" method="post">
-      <div class="row" style="gap:8px;flex-wrap:wrap">
-        <input name="title" placeholder="Tiêu đề" required style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
-        <input name="slug" placeholder="slug (tự tạo nếu bỏ trống)" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
-        <input name="author" placeholder="Tác giả" style="width:200px;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
-        <input name="thumbnail" placeholder="Ảnh đại diện (URL)" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
-        <select name="published" style="padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff">
-          <option value="1">Hiển thị</option>
-          <option value="0">Ẩn</option>
-        </select>
-      </div>
-      <textarea name="content" rows="6" placeholder="Nội dung" style="margin-top:8px;width:100%;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff"></textarea>
-      <button class="btn primary" type="submit" style="margin-top:8px">Đăng</button>
-    </form>
-  </div></div>
+<div class="admin-news">
+  <div class="news-header">
+    <h1>📰 Quản lý Tin tức</h1>
+    <p class="header-subtitle">Thêm và quản lý các bài viết tin tức</p>
+  </div>
 
-  <div class="card"><div class="p">
-    <h3>Danh sách bài viết</h3>
-    <form class="row" action="/admin/news" method="get" style="gap:8px;margin-bottom:8px">
-      <input type="text" name="q" placeholder="Tìm tiêu đề/nội dung" value="<%= typeof q !== 'undefined' ? q : '' %>" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
-      <button class="btn">Lọc</button>
-    </form>
-    <table>
-      <thead><tr><th>Tiêu đề</th><th>Slug</th><th>Tác giả</th><th>Trạng thái</th><th></th></tr></thead>
-      <tbody>
-        <% posts.forEach(p => { %>
-          <tr>
-            <td>
-              <% if (p.thumbnail) { %>
-                <img src="<%= p.thumbnail %>" alt="" style="width:56px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #1f2937;margin-right:6px;vertical-align:middle" />
-              <% } %>
-              <a href="/news/<%= p.slug %>" target="_blank"><%= p.title %></a>
-            </td>
-            <td><%= p.slug %></td>
-            <td><%= p.author || '-' %></td>
-            <td>
-              <form action="/admin/news/<%= p.id %>/toggle?_csrf=<%= csrfToken %>" method="post" style="display:inline">
-                <button class="btn"><%= p.published ? 'Ẩn' : 'Hiển thị' %></button>
-              </form>
-            </td>
-            <td>
-              <div class="row">
-                <a class="btn" href="/admin/news/<%= p.id %>/edit">Sửa</a>
-                <form action="/admin/news/<%= p.id %>/delete?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Xóa bài viết này?')">
-                  <button class="btn">Xóa</button>
-                </form>
-              </div>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-    <div class="row" style="justify-content:center;gap:8px;margin-top:8px">
-      <% if (page > 1) { %>
-        <a class="btn" href="/admin/news?<%= q ? ('q=' + encodeURIComponent(q) + '&') : '' %>page=<%= page - 1 %>">← Trang trước</a>
-      <% } %>
-      <% if (totalPages && page < totalPages) { %>
-        <a class="btn" href="/admin/news?<%= q ? ('q=' + encodeURIComponent(q) + '&') : '' %>page=<%= page + 1 %>">Trang sau →</a>
-      <% } %>
+  <% if (typeof flash !== 'undefined' && flash.success && flash.success.length) { %>
+    <div class="success-message">
+      <%= flash.success.join('<br/>') %>
     </div>
-  </div></div>
+  <% } %>
+
+  <% if (typeof flash !== 'undefined' && flash.error && flash.error.length) { %>
+    <div class="error-message">
+      <%= flash.error.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <!-- Add News Form -->
+  <div class="add-news-section">
+    <div class="section-header">
+      <h2>➕ Thêm bài viết mới</h2>
+    </div>
+    <form action="/admin/news?_csrf=<%= csrfToken %>" method="post" class="news-form">
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="title">Tiêu đề *</label>
+          <input type="text" id="title" name="title" placeholder="Nhập tiêu đề bài viết..." required />
+        </div>
+        
+        <div class="form-group">
+          <label for="slug">Slug (URL)</label>
+          <input type="text" id="slug" name="slug" placeholder="slug-tu-dong-tao-neu-bo-trong" />
+          <small class="form-hint">Để trống sẽ tự động tạo từ tiêu đề</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="author">Tác giả</label>
+          <input type="text" id="author" name="author" placeholder="Tên tác giả" />
+        </div>
+        
+        <div class="form-group">
+          <label for="published">Trạng thái</label>
+          <select id="published" name="published">
+            <option value="1">Hiển thị</option>
+            <option value="0">Ẩn</option>
+          </select>
+        </div>
+        
+        <div class="form-group full-width">
+          <label for="thumbnail">Ảnh đại diện (URL)</label>
+          <input type="url" id="thumbnail" name="thumbnail" placeholder="https://example.com/image.jpg" />
+        </div>
+        
+        <div class="form-group full-width">
+          <label for="content">Nội dung *</label>
+          <textarea id="content" name="content" rows="8" placeholder="Nhập nội dung bài viết..." required></textarea>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="submit" class="btn primary">📝 Đăng bài viết</button>
+        <button type="reset" class="btn secondary">🔄 Đặt lại</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- News List -->
+  <div class="news-list-section">
+    <div class="section-header">
+      <h2>📋 Danh sách bài viết</h2>
+    </div>
+    
+    <div class="search-form-wrapper">
+      <form action="/admin/news" method="get" class="search-form">
+        <input 
+          type="text" 
+          name="q" 
+          placeholder="Tìm kiếm theo tiêu đề hoặc nội dung..." 
+          value="<%= typeof q !== 'undefined' ? q : '' %>" 
+          class="search-input"
+        />
+        <button type="submit" class="btn primary">🔍 Tìm kiếm</button>
+        <% if (q) { %>
+          <a href="/admin/news" class="btn secondary">✕ Xóa bộ lọc</a>
+        <% } %>
+      </form>
+    </div>
+
+    <% if (!posts || posts.length === 0) { %>
+      <div class="empty-state">
+        <p>Không tìm thấy bài viết nào</p>
+      </div>
+    <% } else { %>
+      <div class="news-table-wrapper">
+        <table class="news-table">
+          <thead>
+            <tr>
+              <th>Bài viết</th>
+              <th>Slug</th>
+              <th>Tác giả</th>
+              <th>Ngày tạo</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% posts.forEach(p => { %>
+              <tr>
+                <td>
+                  <div class="news-cell">
+                    <% if (p.thumbnail) { %>
+                      <img src="<%= p.thumbnail %>" alt="<%= p.title %>" class="news-thumb" />
+                    <% } %>
+                    <div class="news-info">
+                      <a href="/news/<%= p.slug %>" target="_blank" class="news-title"><%= p.title %></a>
+                      <p class="news-excerpt"><%= (p.content || '').substring(0, 100) %><%= (p.content || '').length > 100 ? '...' : '' %></p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <code class="news-slug">/<%= p.slug %></code>
+                </td>
+                <td><%= p.author || '-' %></td>
+                <td><%= new Date(p.created_at).toLocaleDateString('vi-VN') %></td>
+                <td>
+                  <form action="/admin/news/<%= p.id %>/toggle?_csrf=<%= csrfToken %>" method="post" style="display:inline">
+                    <button type="submit" class="status-btn <%= p.published ? 'published' : 'draft' %>">
+                      <%= p.published ? '✅ Hiển thị' : '⏸️ Ẩn' %>
+                    </button>
+                  </form>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <a href="/admin/news/<%= p.id %>/edit" class="btn-edit">✏️ Sửa</a>
+                    <form action="/admin/news/<%= p.id %>/delete?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Xóa bài viết này?')" style="display:inline">
+                      <button type="submit" class="btn-delete">🗑️ Xóa</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (totalPages && totalPages > 1) { %>
+        <div class="pagination">
+          <% if (page > 1) { %>
+            <a href="/admin/news?<%= q ? ('q=' + encodeURIComponent(q) + '&') : '' %>page=<%= page - 1 %>" class="pagination-btn">← Trang trước</a>
+          <% } %>
+          <span class="pagination-info">Trang <%= page %> / <%= totalPages %></span>
+          <% if (page < totalPages) { %>
+            <a href="/admin/news?<%= q ? ('q=' + encodeURIComponent(q) + '&') : '' %>page=<%= page + 1 %>" class="pagination-btn">Trang sau →</a>
+          <% } %>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
 </div>
 
+<style>
+.admin-news {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
 
+.news-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.news-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  color: var(--fg);
+}
+
+.header-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.success-message,
+.error-message {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.success-message {
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  color: #10b981;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.add-news-section,
+.news-list-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+.section-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--green);
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--fg);
+}
+
+.news-form {
+  margin-top: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 150px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.search-form-wrapper {
+  margin-bottom: 20px;
+}
+
+.search-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.news-table-wrapper {
+  overflow-x: auto;
+}
+
+.news-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.news-table thead {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.news-table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 14px;
+  border-bottom: 2px solid var(--border);
+}
+
+.news-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.news-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.news-cell {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.news-thumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.news-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.news-title {
+  display: block;
+  font-weight: 600;
+  color: var(--fg);
+  text-decoration: none;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.news-title:hover {
+  color: var(--green);
+}
+
+.news-excerpt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.news-slug {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.status-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-btn.published {
+  background: rgba(22, 163, 74, 0.2);
+  color: #10b981;
+}
+
+.status-btn.draft {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.status-btn:hover {
+  transform: translateY(-1px);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-edit,
+.btn-delete {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-edit {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.btn-edit:hover {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.pagination-info {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.pagination-btn {
+  padding: 8px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+@media (max-width: 968px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .news-table {
+    font-size: 12px;
+  }
+  
+  .news-table th,
+  .news-table td {
+    padding: 12px 8px;
+  }
+  
+  .news-cell {
+    flex-direction: column;
+  }
+  
+  .news-thumb {
+    width: 100%;
+    height: auto;
+  }
+}
+</style>

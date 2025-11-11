@@ -1,0 +1,454 @@
+<div class="order-keys-container">
+  <div class="keys-header">
+    <div class="header-content">
+      <h1>✅ Thanh toán thành công!</h1>
+      <p class="order-info">
+        Giao dịch #<%= order.id %> - 
+        <span class="order-date"><%= new Date(order.created_at).toLocaleString('vi-VN') %></span>
+      </p>
+    </div>
+        <a href="/orders" class="btn secondary">← Quay lại lịch sử giao dịch</a>
+  </div>
+
+  <div class="keys-content">
+    <div class="keys-intro">
+      <h2><%= keyDisplayTitle || '🔑 Key của bạn' %></h2>
+      <% if (keyDisplayMessage) { %>
+        <p class="keys-intro-message"><%= keyDisplayMessage %></p>
+      <% } %>
+    </div>
+
+    <div class="products-keys-list">
+      <% items.forEach(item => { %>
+        <div class="product-keys-card">
+          <div class="product-header">
+            <% if (item.image) { %>
+              <img src="<%= item.image %>" alt="<%= item.title %>" class="product-image" />
+            <% } %>
+            <div class="product-info">
+              <h3><%= item.title %></h3>
+              <p class="product-meta">Số lượng: <%= item.quantity %> × <%= (item.price_cents/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></p>
+            </div>
+          </div>
+
+          <div class="keys-section">
+            <% if (keysByProduct && keysByProduct[item.product_id]) { %>
+              <div class="keys-list">
+                <div class="key-item">
+                  <div class="key-number">Key sản phẩm</div>
+                  <div class="key-content">
+                    <code class="key-value" data-key-value="<%= keysByProduct[item.product_id] %>"><%= keysByProduct[item.product_id] %></code>
+                    <button class="btn-copy-key" data-key-value="<%= keysByProduct[item.product_id] %>" type="button" title="Sao chép">
+                      📋 Sao chép
+                    </button>
+                  </div>
+                </div>
+              </div>
+            <% } else { %>
+              <div class="keys-empty">
+                <p>Chưa có key cho sản phẩm này.</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="keys-footer">
+      <div class="footer-actions">
+        <a href="/orders" class="btn primary">Xem tất cả giao dịch</a>
+        <a href="/" class="btn secondary">Tiếp tục mua sắm</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.order-keys-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.keys-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.header-content h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  color: var(--green);
+}
+
+.order-info {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.order-date {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.keys-content {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+}
+
+.keys-intro {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.keys-intro h2 {
+  margin: 0 0 12px 0;
+  font-size: 24px;
+  color: var(--fg);
+}
+
+.keys-intro-message {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.products-keys-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.product-keys-card {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+
+.product-keys-card:hover {
+  border-color: var(--green);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1);
+}
+
+.product-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.product-info h3 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  color: var(--fg);
+}
+
+.product-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.keys-section {
+  margin-top: 16px;
+}
+
+.keys-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.key-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  border-radius: 8px;
+}
+
+.key-number {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.key-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.key-value {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  color: var(--fg);
+  word-break: break-all;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.btn-copy-key {
+  padding: 10px 16px;
+  background: var(--green);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-copy-key:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+}
+
+.btn-copy-key:active {
+  transform: translateY(0);
+}
+
+.btn-delete-key {
+  padding: 8px 12px;
+  background: #ef4444;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  align-self: flex-end;
+}
+
+.btn-delete-key:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+.keys-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.admin-add-key {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.add-key-form {
+  margin: 0;
+}
+
+.add-key-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.add-key-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+}
+
+.add-key-input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.btn-add-key {
+  padding: 10px 16px;
+  background: var(--green);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-add-key:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+}
+
+.keys-footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid var(--border);
+}
+
+.footer-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+}
+
+.btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--green);
+}
+
+@media (max-width: 768px) {
+  .keys-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .header-content h1 {
+    font-size: 24px;
+  }
+
+  .keys-content {
+    padding: 20px;
+  }
+
+  .product-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .key-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-copy-key {
+    width: 100%;
+  }
+
+  .add-key-input-group {
+    flex-direction: column;
+  }
+
+  .btn-add-key {
+    width: 100%;
+  }
+
+  .footer-actions {
+    flex-direction: column;
+  }
+
+  .footer-actions .btn {
+    width: 100%;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Copy key functionality
+  document.querySelectorAll('.btn-copy-key[data-key-value]').forEach(button => {
+    button.addEventListener('click', function() {
+      const keyValue = this.getAttribute('data-key-value');
+      if (!keyValue) return;
+      
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(keyValue).then(() => {
+          const originalText = this.textContent;
+          const originalBg = this.style.background;
+          this.textContent = '✅ Đã sao chép!';
+          this.style.background = '#10b981';
+          setTimeout(() => {
+            this.textContent = originalText;
+            this.style.background = originalBg || '';
+          }, 2000);
+        }).catch(err => {
+          console.error('Failed to copy:', err);
+          fallbackCopy(keyValue, this);
+        });
+      } else {
+        // Fallback for older browsers
+        fallbackCopy(keyValue, this);
+      }
+    });
+  });
+
+  // Fallback copy method
+  function fallbackCopy(text, button) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        const originalText = button.textContent;
+        const originalBg = button.style.background;
+        button.textContent = '✅ Đã sao chép!';
+        button.style.background = '#10b981';
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.style.background = originalBg || '';
+        }, 2000);
+      } else {
+        alert('Không thể sao chép. Vui lòng sao chép thủ công: ' + text);
+      }
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      alert('Không thể sao chép. Key: ' + text);
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  }
+});
+</script>
+

@@ -89,12 +89,18 @@ header {
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  background: rgba(10, 10, 10, 0.8);
+  background: rgba(10, 10, 10, 0.95);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   z-index: 1000;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 620px) {
+  header {
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  }
 }
 
 header::after {
@@ -271,6 +277,25 @@ form.search-form button:active {
   gap: 12px;
   flex-wrap: wrap;
   flex-shrink: 0;
+}
+
+.user-greeting-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-right: 8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(22, 163, 74, 0.05);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.user-name-top {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+  white-space: nowrap;
 }
 
 .user-info {
@@ -777,6 +802,7 @@ th {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .user-avatar-small {
@@ -787,6 +813,7 @@ th {
   border: 2px solid var(--green);
   box-shadow: 0 0 0 3px var(--green-light);
   transition: all 0.3s;
+  flex-shrink: 0;
 }
 
 .user-avatar-small:hover {
@@ -794,68 +821,345 @@ th {
   box-shadow: 0 0 0 3px var(--green-glow);
 }
 
+.user-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  border: 2px solid var(--green);
+  box-shadow: 0 0 0 3px var(--green-light);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.user-avatar-placeholder:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 3px var(--green-glow);
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.mobile-menu-toggle:hover {
+  background: rgba(31, 41, 55, 0.6);
+  border-color: var(--border-light);
+}
+
 /* Header responsive */
 @media (max-width: 900px) {
+  header {
+    padding: 0;
+  }
+  
+  header .container {
+    padding: 12px 16px;
+  }
+  
   .nav-top {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
   }
+  
+  .nav-top .brand {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  
   .nav-top .search {
-    max-width: 100%;
-    min-width: auto;
+    flex: 1;
+    max-width: none;
+    min-width: 0;
   }
+  
+  form.search-form {
+    gap: 6px;
+  }
+  
+  form.search-form input {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  form.search-form button {
+    padding: 10px 16px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  
   .nav-top .nav-user {
-    justify-content: center;
-    width: 100%;
+    flex-shrink: 0;
+    gap: 6px;
+    flex-wrap: wrap;
   }
+  
+  .user-greeting-top {
+    display: none; /* Hide greeting on mobile in nav-top */
+  }
+  
   .nav-bottom {
+    display: none;
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
   }
+  
+  .nav-bottom.mobile-open {
+    display: flex;
+  }
+  
   .nav-bottom .nav-links {
-    justify-content: center;
-  }
-  .nav-bottom .user-info {
-    justify-content: center;
     flex-direction: column;
+    gap: 8px;
+  }
+  
+  .nav-bottom .nav-links .btn {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 10px 14px;
+  }
+  
+  .nav-bottom .user-info {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .user-greeting {
+    justify-content: center;
     text-align: center;
   }
+  
   .admin-menu {
+    flex-wrap: wrap;
+    gap: 6px;
     justify-content: center;
+  }
+  
+  .admin-menu .btn {
+    font-size: 11px;
+    padding: 6px 10px;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .mobile-menu-toggle {
+    display: flex;
   }
 }
 
 @media (max-width: 620px) {
+  header .container {
+    padding: 8px 10px;
+  }
+  
+  .nav-top {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 0;
+  }
+  
+  .mobile-menu-toggle {
+    order: 1;
+    flex-shrink: 0;
+  }
+  
   .nav-top .brand {
-    font-size: 20px;
-  }
-  .hero h2 {
-    font-size: 24px;
-  }
-  .hero p {
     font-size: 16px;
+    order: 2;
+    flex-shrink: 0;
   }
-  .hero {
-    padding: 24px;
+  
+  .nav-top .brand .dot {
+    width: 8px;
+    height: 8px;
   }
+  
+  .nav-top .nav-user {
+    order: 3;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+  }
+  
+  .nav-top .search {
+    order: 4;
+    width: 100%;
+    margin-top: 6px;
+    flex-basis: 100%;
+  }
+  
+  form.search-form {
+    width: 100%;
+    display: flex;
+    gap: 6px;
+  }
+  
+  form.search-form input {
+    padding: 8px 10px;
+    font-size: 13px;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  form.search-form button {
+    padding: 8px 16px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 50px;
+  }
+  
+  /* Compact buttons on mobile */
   .user-actions, .auth-links {
-    flex-direction: column;
-    width: 100%;
+    gap: 4px;
+    flex-wrap: nowrap;
+    display: flex;
+    align-items: center;
   }
-  .user-actions .btn, .auth-links .btn {
-    width: 100%;
-    justify-content: center;
+  
+  /* Auth buttons - keep text but smaller */
+  .auth-links {
+    gap: 6px;
   }
-  .nav-links {
-    flex-direction: column;
-    width: 100%;
+  
+  .auth-links .btn {
+    padding: 7px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    min-width: auto;
+    flex-shrink: 0;
   }
-  .nav-links .btn {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
+  
+  .auth-links .btn.primary {
+    font-weight: 600;
+  }
+  
+  /* User actions - icon only for some */
+  .user-actions .btn {
+    padding: 6px 8px;
+    min-width: 36px;
+    font-size: 11px;
+  }
+  
+  /* Hide text for wishlist and cart, keep for others */
+  .wishlist-text, .cart-text {
+    display: none;
+  }
+  
+  /* But keep text for login/register buttons */
+  .auth-links .btn span {
+    display: inline;
+  }
+  
+  .cart-btn {
+    padding: 6px 8px;
+    min-width: 36px;
+  }
+  
+  .cart-icon {
+    font-size: 14px;
+  }
+  
+  .wishlist-btn-header {
+    padding: 6px 8px;
+    min-width: 36px;
+  }
+  
+  .user-name {
+    font-size: 11px;
+  }
+  
+  .user-avatar-small {
+    width: 28px;
+    height: 28px;
+  }
+
+  .user-avatar-placeholder {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  
+  /* Ensure buttons don't overflow */
+  .nav-user {
+    overflow: visible;
+  }
+  
+  .user-greeting-top {
+    display: none; /* Hide greeting on very small screens */
+  }
+  
+  .user-actions .btn:not(.wishlist-btn-header):not(.cart-btn) {
+    display: none; /* Hide other user action buttons on very small screens, show only wishlist and cart */
+  }
+  
+  /* Show essential buttons only */
+  .user-actions .wishlist-btn-header,
+  .user-actions .cart-btn {
+    display: inline-flex;
+  }
+  
+  .hero {
+    padding: 16px;
+    margin: 12px 0;
+  }
+  
+  .hero h2 {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+  
+  .hero p {
+    font-size: 13px;
+  }
+  
+  main {
+    padding: 12px 0;
+    min-height: calc(100vh - 140px);
+  }
+  
+  .nav-bottom .nav-links .btn {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .admin-menu .btn {
+    font-size: 10px;
+    padding: 6px 8px;
   }
 }
 

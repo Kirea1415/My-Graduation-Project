@@ -18,7 +18,7 @@
           <span>Chọn tất cả</span>
         </label>
         <div class="selected-info">
-          <span id="selected-count">0</span> sản phẩm đã chọn
+          <span id="selected-count">0</span> sản phẩm (<span id="selected-qty">0</span> món) đã chọn
         </div>
       </div>
       
@@ -42,7 +42,7 @@
             <div class="stock-info">
               <% if (product && product.stock && product.stock > 0) { %>
                 <span class="in-stock">Còn hàng (<%= product.stock %> sản phẩm)</span>
-              <% } else { %>
+<% } else { %>
                 <span class="out-of-stock">Hết hàng</span>
               <% } %>
             </div>
@@ -51,10 +51,10 @@
             <% if (product && product.id) { %>
               <form action="/cart/update/<%= product.id %>?_csrf=<%= csrfToken %>" method="post" class="quantity-form">
                 <div class="quantity-controls">
-                  <button type="button" class="qty-btn minus" onclick="changeQuantity(<%= product.id %>, -1)">-</button>
-                  <input type="number" name="quantity" value="<%= qty %>" min="0" max="<%= (product && product.stock) ? product.stock : 999 %>" 
-                         class="quantity-input" id="qty-<%= product.id %>" onchange="updateQuantity(<%= product.id %>)">
-                  <button type="button" class="qty-btn plus" onclick="changeQuantity(<%= product.id %>, 1)">+</button>
+                  <button type="button" class="qty-btn minus" data-product-id="<%- product.id %>" data-delta="-1">-</button>
+                  <input type="number" name="quantity" value="<%= qty %>" min="0" max="<%- (product && product.stock) ? product.stock : 999 %>" 
+                         class="quantity-input" id="qty-<%- product.id %>" data-product-id="<%- product.id %>">
+                  <button type="button" class="qty-btn plus" data-product-id="<%- product.id %>" data-delta="1">+</button>
                 </div>
               </form>
               <div class="item-total">
@@ -62,7 +62,7 @@
               </div>
               <form action="/cart/remove/<%= product.id %>?_csrf=<%= csrfToken %>" method="post" class="remove-form">
                 <button type="submit" class="btn-remove" title="Xóa sản phẩm">🗑️</button>
-              </form>
+            </form>
             <% } else { %>
               <p class="muted">Sản phẩm không hợp lệ</p>
             <% } %>
@@ -88,13 +88,13 @@
       
       <div class="cart-actions">
         <a href="/" class="btn">Tiếp tục mua sắm</a>
-        <button type="submit" class="btn primary" id="checkout-btn" disabled>
+        <button type="button" class="btn primary" id="checkout-btn">
           Thanh toán (<span id="checkout-count">0</span>)
         </button>
       </div>
     </form>
   <% } %>
-</div>
+  </div>
 
 <style>
 .cart-container {
@@ -360,24 +360,76 @@
 }
 </style>
 
-<script>
-const cartData = {};
-<% if (cart && cart.items) { %>
-  <% Object.values(cart.items).forEach((item) => { %>
-    <% if (item && item.product && item.product.id) { %>
-      cartData[<%= item.product.id %>] = {
-        price: <%= (item.product.price_cents || 0) %>,
-        qty: <%= item.qty || 0 %>
+<% 
+// Prepare cart data JSON in EJS block
+let cartDataJson = '{}';
+if (cart && cart.items) {
+  const data = {};
+  Object.values(cart.items).forEach((item) => {
+    if (item && item.product && item.product.id) {
+      data[item.product.id] = {
+        price: item.product.price_cents || 0,
+        qty: item.qty || 0
       };
-    <% } %>
-  <% }) %>
-<% } %>
+    }
+  });
+  cartDataJson = JSON.stringify(data);
+}
+%>
+<script id="cart-data-script" type="application/json"><%- cartDataJson %></script>
+<script>
+// Cart data initialization
+const cartDataScript = document.getElementById('cart-data-script');
+const cartData = cartDataScript ? JSON.parse(cartDataScript.textContent) : {};
+
+// Event listeners for quantity buttons
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize cart data from current page state
+  document.querySelectorAll('.cart-item').forEach(item => {
+    const productId = parseInt(item.getAttribute('data-product-id'));
+    const qtyInput = document.getElementById('qty-' + productId);
+    if (qtyInput && cartData[productId]) {
+      cartData[productId].qty = parseInt(qtyInput.value) || 0;
+    }
+  });
+  
+  // Initial update
+  updateSelectedTotal();
+  
+  document.querySelectorAll('.qty-btn.minus, .qty-btn.plus').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const productId = parseInt(this.getAttribute('data-product-id'));
+      const delta = parseInt(this.getAttribute('data-delta'));
+      changeQuantity(productId, delta);
+    });
+  });
+  
+  document.querySelectorAll('.quantity-input').forEach(input => {
+    input.addEventListener('change', function() {
+      const productId = parseInt(this.getAttribute('data-product-id'));
+      updateQuantity(productId);
+    });
+  });
+});
 
 function changeQuantity(productId, delta) {
   const input = document.getElementById('qty-' + productId);
+  if (!input) return;
   const currentValue = parseInt(input.value) || 0;
   const newValue = Math.max(0, currentValue + delta);
   input.value = newValue;
+  // Update cartData immediately
+  if (cartData[productId]) {
+    cartData[productId].qty = newValue;
+  }
+  // Update UI immediately
+  updateSelectedTotal();
+  // Update item total price
+  const itemTotalEl = input.closest('.item-controls').querySelector('.item-total .price');
+  if (itemTotalEl && cartData[productId]) {
+    const totalPrice = (cartData[productId].price * newValue / 100).toLocaleString('vi-VN', {style:'currency',currency:'VND'});
+    itemTotalEl.textContent = totalPrice;
+  }
   updateQuantity(productId);
 }
 
@@ -387,6 +439,14 @@ function updateQuantity(productId) {
   // Update cartData
   if (cartData[productId]) {
     cartData[productId].qty = parseInt(input.value) || 0;
+  }
+  // Update UI immediately before submit
+  updateSelectedTotal();
+  // Update item total price
+  const itemTotalEl = input.closest('.item-controls').querySelector('.item-total .price');
+  if (itemTotalEl && cartData[productId]) {
+    const totalPrice = (cartData[productId].price * cartData[productId].qty / 100).toLocaleString('vi-VN', {style:'currency',currency:'VND'});
+    itemTotalEl.textContent = totalPrice;
   }
   form.submit();
 }
@@ -401,66 +461,251 @@ function toggleSelectAll() {
 }
 
 function updateSelectedTotal() {
-  const checkboxes = document.querySelectorAll('.item-checkbox-input:checked');
-  const selectedCount = checkboxes.length;
-  
-  let totalCents = 0;
-  checkboxes.forEach(cb => {
-    const productId = parseInt(cb.value);
-    if (cartData[productId]) {
-      totalCents += cartData[productId].price * cartData[productId].qty;
+  try {
+    const checkboxes = document.querySelectorAll('.item-checkbox-input:checked');
+    const selectedCount = checkboxes.length;
+    
+    let totalCents = 0;
+    let totalQty = 0; // Tổng số lượng thực tế
+    
+    checkboxes.forEach(cb => {
+      const productId = parseInt(cb.value);
+      if (cartData[productId]) {
+        const qty = cartData[productId].qty || 0;
+        totalCents += cartData[productId].price * qty;
+        totalQty += qty; // Cộng số lượng thực tế
+      }
+    });
+    
+    // Update UI
+    const selectedCountEl = document.getElementById('selected-count');
+    const selectedQtyEl = document.getElementById('selected-qty');
+    const checkoutCountEl = document.getElementById('checkout-count');
+    const subtotalEl = document.getElementById('subtotal');
+    const totalEl = document.getElementById('total');
+    const checkoutBtn = document.getElementById('checkout-btn');
+    
+    if (selectedCountEl) selectedCountEl.textContent = selectedCount;
+    if (selectedQtyEl) selectedQtyEl.textContent = totalQty;
+    if (checkoutCountEl) checkoutCountEl.textContent = totalQty; // Hiển thị tổng số lượng thực tế
+    
+    const formattedTotal = (totalCents / 100).toLocaleString('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    });
+    
+    if (subtotalEl) subtotalEl.textContent = formattedTotal;
+    if (totalEl) totalEl.textContent = formattedTotal;
+    
+    // Always enable checkout button if there are items in cart
+    // The form submit handler will check if items are selected
+    if (checkoutBtn) {
+      const allCheckboxes = document.querySelectorAll('.item-checkbox-input');
+      if (allCheckboxes.length > 0) {
+        // Enable button if there are any items (selected or not)
+        checkoutBtn.disabled = false;
+        // But add visual feedback if nothing is selected
+        if (selectedCount === 0) {
+          checkoutBtn.style.opacity = '0.5';
+          checkoutBtn.style.cursor = 'not-allowed';
+        } else {
+          checkoutBtn.style.opacity = '1';
+          checkoutBtn.style.cursor = 'pointer';
+        }
+      } else {
+        checkoutBtn.disabled = true;
+      }
     }
-  });
-  
-  // Update UI
-  document.getElementById('selected-count').textContent = selectedCount;
-  document.getElementById('checkout-count').textContent = selectedCount;
-  document.getElementById('subtotal').textContent = (totalCents / 100).toLocaleString('vi-VN', {
-    style: 'currency',
-    currency: 'VND'
-  });
-  document.getElementById('total').textContent = (totalCents / 100).toLocaleString('vi-VN', {
-    style: 'currency',
-    currency: 'VND'
-  });
-  
-  // Enable/disable checkout button
-  const checkoutBtn = document.getElementById('checkout-btn');
-  if (selectedCount > 0) {
-    checkoutBtn.disabled = false;
-  } else {
-    checkoutBtn.disabled = true;
-  }
-  
-  // Update select all checkbox
-  const allCheckboxes = document.querySelectorAll('.item-checkbox-input');
-  const selectAll = document.getElementById('select-all');
-  if (selectedCount === allCheckboxes.length && allCheckboxes.length > 0) {
-    selectAll.checked = true;
-    selectAll.indeterminate = false;
-  } else if (selectedCount > 0) {
-    selectAll.checked = false;
-    selectAll.indeterminate = true;
-  } else {
-    selectAll.checked = false;
-    selectAll.indeterminate = false;
+    
+    // Update select all checkbox
+    const allCheckboxes = document.querySelectorAll('.item-checkbox-input');
+    const selectAll = document.getElementById('select-all');
+    if (selectAll) {
+      if (selectedCount === allCheckboxes.length && allCheckboxes.length > 0) {
+        selectAll.checked = true;
+        selectAll.indeterminate = false;
+      } else if (selectedCount > 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = true;
+      } else {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+      }
+    }
+  } catch (error) {
+    console.error('Error in updateSelectedTotal:', error);
   }
 }
 
-// Prevent form submission if no items selected
-document.getElementById('cart-form')?.addEventListener('submit', function(e) {
-  const selected = document.querySelectorAll('.item-checkbox-input:checked');
-  if (selected.length === 0) {
-    e.preventDefault();
-    alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán');
-    return false;
+// Handle form submission - ensure it's set up after DOM is ready
+function setupFormSubmit() {
+  const cartForm = document.getElementById('cart-form');
+  if (!cartForm) {
+    console.error('Cart form not found!');
+    return;
   }
-});
+  
+  // Remove any existing submit listeners by replacing the form's submit handler
+  cartForm.onsubmit = null;
+  
+  // Add event listener to the form
+  cartForm.addEventListener('submit', function(e) {
+    e.preventDefault(); // Always prevent default first
+    console.log('Form submit event triggered');
+    
+    const selected = document.querySelectorAll('.item-checkbox-input:checked');
+    console.log('Selected items count:', selected.length);
+    
+    if (selected.length === 0) {
+      alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán');
+      return false;
+    }
+    
+    // Get selected values
+    const selectedValues = Array.from(selected).map(cb => cb.value);
+    console.log('Submitting form with selected items:', selectedValues);
+    
+    // Get CSRF token
+    const csrfInput = cartForm.querySelector('input[name="_csrf"]');
+    const csrfToken = csrfInput ? csrfInput.value : '';
+    
+    // Create a new form to submit
+    const submitForm = document.createElement('form');
+    submitForm.method = 'POST';
+    submitForm.action = '/checkout';
+    submitForm.style.display = 'none';
+    
+    // Add CSRF token
+    if (csrfToken) {
+      const csrfField = document.createElement('input');
+      csrfField.type = 'hidden';
+      csrfField.name = '_csrf';
+      csrfField.value = csrfToken;
+      submitForm.appendChild(csrfField);
+    }
+    
+    // Add selected items
+    selectedValues.forEach(value => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'selected_items';
+      input.value = value;
+      submitForm.appendChild(input);
+    });
+    
+    document.body.appendChild(submitForm);
+    console.log('Submitting form...');
+    submitForm.submit();
+  });
+  
+  // Add click handler to button (button is now type="button" so we handle it directly)
+  const checkoutBtn = document.getElementById('checkout-btn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', function(e) {
+      console.log('Checkout button clicked');
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Get selected items
+      const selected = document.querySelectorAll('.item-checkbox-input:checked');
+      console.log('Selected items count:', selected.length);
+      
+      if (selected.length === 0) {
+        alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán');
+        return false;
+      }
+      
+      // Get selected values
+      const selectedValues = Array.from(selected).map(cb => cb.value);
+      console.log('Submitting form with selected items:', selectedValues);
+      
+      // Get CSRF token
+      const csrfInput = cartForm.querySelector('input[name="_csrf"]');
+      const csrfToken = csrfInput ? csrfInput.value : '';
+      
+      // Create a new form to submit
+      const submitForm = document.createElement('form');
+      submitForm.method = 'POST';
+      submitForm.action = '/checkout';
+      submitForm.style.display = 'none';
+      
+      // Add CSRF token
+      if (csrfToken) {
+        const csrfField = document.createElement('input');
+        csrfField.type = 'hidden';
+        csrfField.name = '_csrf';
+        csrfField.value = csrfToken;
+        submitForm.appendChild(csrfField);
+      }
+      
+      // Add selected items
+      selectedValues.forEach(value => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'selected_items';
+        input.value = value;
+        submitForm.appendChild(input);
+      });
+      
+      document.body.appendChild(submitForm);
+      console.log('Submitting form...');
+      submitForm.submit();
+    });
+    
+    console.log('Checkout button handler attached');
+  } else {
+    console.error('Checkout button not found!');
+  }
+  
+  console.log('Form submit handler attached successfully');
+  console.log('Cart form:', cartForm);
+  console.log('Checkout button:', checkoutBtn);
+}
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', function() {
-  updateSelectedTotal();
-});
+// Initialize function
+function initializeCart() {
+  try {
+    // Check all checkboxes by default (they are already checked in HTML)
+    const checkboxes = document.querySelectorAll('.item-checkbox-input');
+    if (checkboxes.length > 0) {
+      checkboxes.forEach(cb => {
+        if (!cb.checked) {
+          cb.checked = true;
+        }
+      });
+      
+      // Update select all checkbox state
+      const selectAll = document.getElementById('select-all');
+      const checkedCount = document.querySelectorAll('.item-checkbox-input:checked').length;
+      if (selectAll && checkboxes.length > 0 && checkboxes.length === checkedCount) {
+        selectAll.checked = true;
+        selectAll.indeterminate = false;
+      }
+      
+      // Calculate totals
+      updateSelectedTotal();
+    } else {
+      // No items in cart, ensure button is disabled
+      const checkoutBtn = document.getElementById('checkout-btn');
+      if (checkoutBtn) {
+        checkoutBtn.disabled = true;
+      }
+    }
+    
+    // Setup form submit handler
+    setupFormSubmit();
+  } catch (error) {
+    console.error('Error initializing cart:', error);
+  }
+}
+
+// Initialize on load - try immediately if DOM is ready, otherwise wait
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeCart);
+} else {
+  // DOM is already ready
+  initializeCart();
+}
 </script>
 
 

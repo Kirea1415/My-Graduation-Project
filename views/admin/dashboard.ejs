@@ -22,13 +22,7 @@
         <div class="stat-value"><%= prodCount || 0 %></div>
         <p class="stat-label">Tổng số sản phẩm</p>
       </div>
-      <div class="stat-links">
-        <a href="/admin/products" class="stat-link">Quản lý →</a>
-        <a href="/admin/products" class="stat-link-add">
-          <span>➕</span>
-          Thêm mới
-        </a>
-      </div>
+      <a href="/admin/products" class="stat-link">Quản lý →</a>
     </div>
     
     <div class="stat-card">
@@ -48,17 +42,7 @@
         <div class="stat-value"><%= userCount || 0 %></div>
         <p class="stat-label">Tổng số người dùng</p>
       </div>
-      <a href="#" class="stat-link">Xem →</a>
-    </div>
-    
-    <div class="stat-card">
-      <div class="stat-icon orders">🛒</div>
-      <div class="stat-info">
-        <h3>Đơn hàng</h3>
-        <div class="stat-value"><%= orderCount || 0 %></div>
-        <p class="stat-label">Tổng số đơn hàng</p>
-      </div>
-      <a href="/admin/carts" class="stat-link">Xem →</a>
+      <a href="/admin/users" class="stat-link">Xem →</a>
     </div>
     
     <div class="stat-card">
@@ -68,7 +52,7 @@
         <div class="stat-value"><%= (totalRevenue || 0).toLocaleString('vi-VN') %> VND</div>
         <p class="stat-label">Tổng doanh thu</p>
       </div>
-      <a href="/admin/carts" class="stat-link">Chi tiết →</a>
+      <a href="/admin/revenue" class="stat-link">📊 Xem biểu đồ →</a>
     </div>
     
     <div class="stat-card">
@@ -112,17 +96,17 @@
           <span class="action-icon">➕</span>
           <span class="action-text">Thêm sản phẩm mới</span>
         </a>
-        <a href="/admin/categories/new" class="quick-action-btn">
-          <span class="action-icon">📁</span>
-          <span class="action-text">Thêm danh mục</span>
-        </a>
-        <a href="/admin/news/new" class="quick-action-btn">
-          <span class="action-icon">📰</span>
-          <span class="action-text">Thêm tin tức</span>
-        </a>
         <a href="/admin/settings" class="quick-action-btn">
           <span class="action-icon">⚙️</span>
           <span class="action-text">Cài đặt</span>
+        </a>
+        <a href="/admin/lockout-settings" class="quick-action-btn">
+          <span class="action-icon">🔒</span>
+          <span class="action-text">Cài đặt khóa tài khoản</span>
+        </a>
+        <a href="/admin/keys" class="quick-action-btn">
+          <span class="action-icon">🔑</span>
+          <span class="action-text">Quản lý Key</span>
         </a>
       </div>
     </div>
@@ -131,7 +115,7 @@
 
 <style>
 .admin-dashboard {
-  max-width: 1400px;
+  max-width: f00px;
   margin: 0 auto;
 }
 

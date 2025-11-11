@@ -1,0 +1,428 @@
+<div class="admin-users">
+  <div class="users-header">
+    <h1>👥 Quản lý người dùng</h1>
+    <p class="header-subtitle">Danh sách tất cả người dùng trong hệ thống</p>
+  </div>
+
+  <% if (typeof flash !== 'undefined' && flash.success && flash.success.length) { %>
+    <div class="success-message">
+      <%= flash.success.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <% if (typeof flash !== 'undefined' && flash.error && flash.error.length) { %>
+    <div class="error-message">
+      <%= flash.error.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <div class="users-filters">
+    <form method="GET" action="/admin/users" class="search-form">
+      <input
+        type="text"
+        name="q"
+        value="<%= q || '' %>"
+        placeholder="Tìm kiếm theo tên hoặc email..."
+        class="search-input"
+      />
+      <button type="submit" class="btn primary">🔍 Tìm kiếm</button>
+      <% if (q) { %>
+        <a href="/admin/users" class="btn secondary">✕ Xóa bộ lọc</a>
+      <% } %>
+    </form>
+  </div>
+
+  <div class="users-stats">
+    <div class="stat-item">
+      <span class="stat-label">Tổng số người dùng:</span>
+      <span class="stat-value"><%= total || 0 %></span>
+    </div>
+  </div>
+
+  <div class="users-table-wrapper">
+    <% if (!users || users.length === 0) { %>
+      <div class="empty-state">
+        <p>Không tìm thấy người dùng nào</p>
+      </div>
+    <% } else { %>
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Thông tin</th>
+            <th>Email</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th>Giao dịch</th>
+            <th>Tổng chi tiêu</th>
+            <th>Ngày đăng ký</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(user => { %>
+            <tr>
+              <td><%= user.id %></td>
+              <td>
+                <div class="user-info">
+                  <% if (user.avatar) { %>
+                    <img src="<%= user.avatar %>" alt="<%= user.name %>" class="user-avatar" />
+                  <% } %>
+                  <div>
+                    <div class="user-name"><%= user.name %></div>
+                    <% if (user.phone) { %>
+                      <div class="user-phone">📞 <%= user.phone %></div>
+                    <% } %>
+                  </div>
+                </div>
+              </td>
+              <td><%= user.email %></td>
+              <td>
+                <span class="role-badge role-<%= user.role %>">
+                  <%= user.role === 'admin' ? '👑 Admin' : '👤 Khách hàng' %>
+                </span>
+              </td>
+              <td>
+                <% if (user.isLocked) { %>
+                  <span class="status-badge locked" title="<%= user.lockoutReason || '' %>">
+                    🔒 Đã khóa (<%= user.remainingMinutes %> phút)
+                  </span>
+                <% } else { %>
+                  <span class="status-badge active">✅ Hoạt động</span>
+                <% } %>
+              </td>
+              <td class="center"><%= user.order_count || 0 %></td>
+              <td class="right">
+                <%= ((user.total_spent || 0) / 100).toLocaleString('vi-VN', {style:'currency',currency:'VND'}) %>
+              </td>
+              <td><%= new Date(user.created_at).toLocaleDateString('vi-VN') %></td>
+              <td>
+                <div class="action-buttons">
+                  <a href="/admin/users/<%= user.id %>/orders" class="btn-view-orders" title="Xem lịch sử giao dịch">📋 Lịch sử</a>
+                  <% if (user.isLocked) { %>
+                    <form action="/admin/users/<%= encodeURIComponent(user.email) %>/unlock?_csrf=<%= csrfToken %>" method="post" style="display:inline;" onsubmit="return confirm('Mở khóa tài khoản <%= user.email %>?')">
+                      <button type="submit" class="btn-unlock" title="Mở khóa tài khoản">🔓 Mở khóa</button>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+
+      <% if (totalPages > 1) { %>
+        <div class="pagination">
+          <% if (page > 1) { %>
+            <a href="?page=<%= page - 1 %><%= q ? '&q=' + encodeURIComponent(q) : '' %>" class="pagination-btn">← Trước</a>
+          <% } %>
+          <span class="pagination-info">Trang <%= page %> / <%= totalPages %></span>
+          <% if (page < totalPages) { %>
+            <a href="?page=<%= page + 1 %><%= q ? '&q=' + encodeURIComponent(q) : '' %>" class="pagination-btn">Sau →</a>
+          <% } %>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
+<style>
+.admin-users {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.users-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.users-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  color: var(--fg);
+}
+
+.header-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.success-message,
+.error-message {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.success-message {
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  color: #10b981;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.users-filters {
+  margin-bottom: 20px;
+}
+
+.search-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.users-stats {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.users-table-wrapper {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table thead {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.users-table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 14px;
+  border-bottom: 2px solid var(--border);
+}
+
+.users-table th.center {
+  text-align: center;
+}
+
+.users-table th.right {
+  text-align: right;
+}
+
+.users-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.users-table td.center {
+  text-align: center;
+}
+
+.users-table td.right {
+  text-align: right;
+}
+
+.users-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-name {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.user-phone {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.role-badge.role-admin {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.role-badge.role-customer {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: rgba(22, 163, 74, 0.2);
+  color: #10b981;
+}
+
+.status-badge.locked {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.btn-unlock {
+  padding: 6px 12px;
+  background: #10b981;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-unlock:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-view-orders {
+  padding: 6px 12px;
+  background: #3b82f6;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.btn-view-orders:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.pagination-info {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.pagination-btn {
+  padding: 8px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+@media (max-width: 968px) {
+  .users-table {
+    font-size: 12px;
+  }
+  
+  .users-table th,
+  .users-table td {
+    padding: 12px 8px;
+  }
+}
+</style>
+

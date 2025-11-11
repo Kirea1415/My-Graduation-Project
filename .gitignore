@@ -1,5 +1,9 @@
 node_modules/
 data/*.db*
+data/*backup*.sql
+data/*export*.sql
+data/safekeys-latest-backup.sql
+data/safekeys-latest-export.sql
 .env
 *.log
 .DS_Store

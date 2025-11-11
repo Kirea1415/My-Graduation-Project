@@ -1,0 +1,479 @@
+<div class="admin-revenue">
+  <div class="revenue-header">
+    <h1>💰 Quản lý doanh thu</h1>
+    <p class="header-subtitle">Thống kê và phân tích doanh thu chi tiết</p>
+  </div>
+
+  <% if (typeof flash !== 'undefined' && flash.success && flash.success.length) { %>
+    <div class="success-message">
+      <%= flash.success.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <% if (typeof flash !== 'undefined' && flash.error && flash.error.length) { %>
+    <div class="error-message">
+      <%= flash.error.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <!-- Revenue Stats -->
+  <div class="revenue-stats">
+    <div class="stat-card">
+      <div class="stat-label">Tổng đơn hàng</div>
+      <div class="stat-value"><%= revenueStats.totalOrders || 0 %></div>
+      <div class="stat-sublabel">Tất cả trạng thái</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">Đơn đã thanh toán</div>
+      <div class="stat-value"><%= revenueStats.paidOrders || 0 %></div>
+      <div class="stat-sublabel">Đã thanh toán thành công</div>
+    </div>
+    <div class="stat-card highlight">
+      <div class="stat-label">Doanh thu</div>
+      <div class="stat-value"><%= (revenueStats.paidRevenue || 0).toLocaleString('vi-VN') %> VND</div>
+      <div class="stat-sublabel">Từ đơn đã thanh toán</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Giá trị đơn trung bình</div>
+      <div class="stat-value"><%= (revenueStats.avgOrderValue || 0).toLocaleString('vi-VN') %> VND</div>
+      <div class="stat-sublabel">Trung bình mỗi đơn</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-label">Đơn chờ xử lý</div>
+      <div class="stat-value"><%= revenueStats.pendingOrders || 0 %></div>
+      <div class="stat-sublabel">Chưa thanh toán</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="stat-label">Đơn đã hủy</div>
+      <div class="stat-value"><%= revenueStats.cancelledOrders || 0 %></div>
+      <div class="stat-sublabel">Đã hủy bỏ</div>
+    </div>
+  </div>
+
+  <!-- Period Filter -->
+  <div class="revenue-filters">
+    <form method="GET" action="/admin/revenue" class="filter-form">
+      <select name="period" class="filter-select">
+        <option value="day" <%= period === 'day' ? 'selected' : '' %>>7 ngày qua</option>
+        <option value="week" <%= period === 'week' ? 'selected' : '' %>>30 ngày qua</option>
+        <option value="month" <%= period === 'month' ? 'selected' : '' %>>6 tháng qua</option>
+        <option value="year" <%= period === 'year' ? 'selected' : '' %>>2 năm qua</option>
+      </select>
+      <button type="submit" class="btn primary">🔍 Áp dụng</button>
+    </form>
+  </div>
+
+  <!-- Additional Stats -->
+  <div class="additional-stats">
+    <div class="stat-box">
+      <h3>📊 Tỷ lệ thành công</h3>
+      <div class="success-rate">
+        <div class="rate-value" data-rate="<%= revenueStats.totalOrders > 0 ? Math.round((revenueStats.paidOrders / revenueStats.totalOrders) * 100) : 0 %>">0%</div>
+        <div class="rate-bar">
+          <div class="rate-fill" data-width="<%= revenueStats.totalOrders > 0 ? (revenueStats.paidOrders / revenueStats.totalOrders) * 100 : 0 %>"></div>
+        </div>
+        <div class="rate-label"><%= revenueStats.paidOrders %> / <%= revenueStats.totalOrders %> đơn hàng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-section">
+    <div class="chart-card">
+      <h3>📈 Biểu đồ doanh thu theo ngày</h3>
+      <div class="chart-container">
+        <canvas id="dailyChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+    
+    <div class="chart-card">
+      <h3>📊 Biểu đồ doanh thu theo tháng</h3>
+      <div class="chart-container">
+        <canvas id="monthlyChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script type="application/json" id="chart-data"><%- JSON.stringify(chartData) %></script>
+<script type="application/json" id="monthly-data"><%- JSON.stringify(monthlyData) %></script>
+<script>
+const chartData = JSON.parse(document.getElementById('chart-data').textContent);
+const monthlyData = JSON.parse(document.getElementById('monthly-data').textContent);
+
+// Set success rate
+document.addEventListener('DOMContentLoaded', function() {
+  const rateValue = document.querySelector('.rate-value');
+  const rateFill = document.querySelector('.rate-fill');
+  if (rateValue && rateFill) {
+    const rate = parseFloat(rateValue.getAttribute('data-rate') || 0);
+    const width = parseFloat(rateFill.getAttribute('data-width') || 0);
+    rateValue.textContent = rate + '%';
+    rateFill.style.width = width + '%';
+  }
+});
+
+// Daily Chart
+const dailyCtx = document.getElementById('dailyChart');
+if (dailyCtx && chartData.length > 0) {
+  new Chart(dailyCtx, {
+    type: 'line',
+    data: {
+      labels: chartData.map(d => {
+        const date = new Date(d.date);
+        return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      }),
+      datasets: [{
+        label: 'Doanh thu (VND)',
+        data: chartData.map(d => d.revenue),
+        borderColor: '#16a34a',
+        backgroundColor: 'rgba(22, 163, 74, 0.1)',
+        tension: 0.4,
+        fill: true
+      }, {
+        label: 'Số đơn hàng',
+        data: chartData.map(d => d.orders),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        fill: true,
+        yAxisID: 'y1'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#e5e7eb'
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: '#9ca3af',
+            callback: function(value) {
+              return value.toLocaleString('vi-VN') + ' VND';
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)'
+          }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          beginAtZero: true,
+          ticks: {
+            color: '#9ca3af'
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        },
+        x: {
+          ticks: {
+            color: '#9ca3af'
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)'
+          }
+        }
+      }
+    }
+  });
+}
+
+// Monthly Chart
+const monthlyCtx = document.getElementById('monthlyChart');
+if (monthlyCtx && monthlyData.length > 0) {
+  new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+      labels: monthlyData.map(d => {
+        const [year, month] = d.month.split('-');
+        return `Tháng ${month}/${year}`;
+      }),
+      datasets: [{
+        label: 'Doanh thu (VND)',
+        data: monthlyData.map(d => d.revenue),
+        backgroundColor: 'rgba(22, 163, 74, 0.6)',
+        borderColor: '#16a34a',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#e5e7eb'
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: '#9ca3af',
+            callback: function(value) {
+              return value.toLocaleString('vi-VN') + ' VND';
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)'
+          }
+        },
+        x: {
+          ticks: {
+            color: '#9ca3af'
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)'
+          }
+        }
+      }
+    }
+  });
+}
+</script>
+
+<style>
+.admin-revenue {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.revenue-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.revenue-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  color: var(--fg);
+}
+
+.header-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.success-message,
+.error-message {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.success-message {
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  color: #10b981;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.revenue-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.revenue-stats .stat-card {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.revenue-stats .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.revenue-stats .stat-card.highlight {
+  border-color: var(--green);
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.revenue-stats .stat-label {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.revenue-stats .stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+
+.revenue-stats .stat-sublabel {
+  color: var(--muted);
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.revenue-stats .stat-card.success {
+  border-color: #10b981;
+  background: rgba(22, 163, 74, 0.05);
+}
+
+.revenue-stats .stat-card.warning {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.revenue-stats .stat-card.danger {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.revenue-filters {
+  margin-bottom: 24px;
+}
+
+.filter-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 24px;
+}
+
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.chart-card h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  color: var(--fg);
+  border-bottom: 2px solid var(--green);
+  padding-bottom: 12px;
+}
+
+.chart-container {
+  position: relative;
+  height: 400px;
+  margin-top: 20px;
+}
+
+.chart-card canvas {
+  max-height: 400px;
+}
+
+.additional-stats {
+  margin-bottom: 24px;
+}
+
+.stat-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.stat-box h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  color: var(--fg);
+  border-bottom: 2px solid var(--green);
+  padding-bottom: 12px;
+}
+
+.success-rate {
+  text-align: center;
+}
+
+.rate-value {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 16px;
+}
+
+.rate-bar {
+  width: 100%;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.rate-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), #10b981);
+  border-radius: 12px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.rate-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.rate-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 968px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+

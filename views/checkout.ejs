@@ -37,12 +37,15 @@
       <div class="checkout-section">
         <h2>💳 Phương thức thanh toán</h2>
         <div class="payment-methods">
-          <div class="payment-method active">
-            <span class="payment-icon">💳</span>
-            <span>Thanh toán khi nhận key</span>
-            <span class="payment-badge">Mô phỏng</span>
+          <div class="payment-method active" data-method="momo" onclick="selectPaymentMethod('momo')">
+            <span class="payment-icon">📱</span>
+            <span>Ví điện tử MoMo</span>
+            <span class="payment-badge">Thanh toán ngay</span>
           </div>
         </div>
+        <p class="muted" style="margin-top: 12px; font-size: 14px;">
+          💡 Sau khi thanh toán thành công, key sẽ được hiển thị ngay trong trang đơn hàng của bạn.
+        </p>
       </div>
     </div>
     
@@ -70,10 +73,11 @@
           <span class="price"><%= ((cart.totalCents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
         </div>
         
-        <form action="/checkout/pay?_csrf=<%= csrfToken %>" method="post" class="checkout-form">
-          <button type="submit" class="btn primary large checkout-btn" <%= (insufficient && insufficient.length) ? 'disabled' : '' %>>
-            <span>💳</span>
-            Xác nhận thanh toán
+        <form id="checkout-form" class="checkout-form">
+          <input type="hidden" name="payment_method" id="payment-method" value="momo" />
+          <button type="submit" class="btn primary large checkout-btn" id="checkout-btn" <%= (insufficient && insufficient.length) ? 'disabled' : '' %>>
+            <span id="checkout-icon">📱</span>
+            <span id="checkout-text">Thanh toán bằng MoMo</span>
           </button>
         </form>
         
@@ -282,6 +286,84 @@
     position: static;
   }
 }
+
+.payment-method {
+  cursor: pointer;
+}
+
+.payment-method.active {
+  border-color: var(--green);
+  background: rgba(22, 163, 74, 0.1);
+}
 </style>
+
+<% 
+// Prepare totalCents value in EJS block
+const totalCentsValue = (cart && cart.totalCents) ? cart.totalCents : 0;
+%>
+<script id="checkout-data-script" type="application/json"><%- JSON.stringify({ totalCents: totalCentsValue }) %></script>
+<script>
+// Handle form submission
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('checkout-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('checkout-btn');
+    const originalText = btn.innerHTML;
+    const isDisabled = btn.disabled;
+    
+    if (isDisabled) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Đang xử lý...';
+    
+    try {
+      // MoMo payment flow
+      const checkoutDataScript = document.getElementById('checkout-data-script');
+      const checkoutData = checkoutDataScript ? JSON.parse(checkoutDataScript.textContent) : { totalCents: 0 };
+      const totalCents = checkoutData.totalCents;
+      
+      const response = await fetch('/checkout/momo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMsg = 'Không thể tạo yêu cầu thanh toán MoMo';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMsg = errorData.message || errorMsg;
+        } catch (e) {
+          errorMsg = errorText || errorMsg;
+        }
+        alert(errorMsg);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        return;
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.payUrl) {
+        // Redirect to MoMo payment page
+        window.location.href = data.payUrl;
+      } else {
+        alert(data.message || 'Không thể tạo yêu cầu thanh toán MoMo');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Có lỗi xảy ra. Vui lòng thử lại.');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  });
+});
+</script>
 
 

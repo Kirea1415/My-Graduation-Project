@@ -5,7 +5,7 @@
     <div class="row" style="gap:8px;flex-wrap:wrap">
       <input name="title" value="<%= product.title %>" required style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
       <input name="slug" value="<%= product.slug %>" required style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
-      <input name="price_cents" value="<%= product.price_cents %>" type="number" required style="width:160px;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+      <input name="price_vnd" value="<%= Math.round(product.price_cents / 100) %>" type="number" required style="width:160px;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" placeholder="Giá VND" />
       <input name="image" value="<%= product.image || '' %>" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
       <select name="category_id" style="padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff">
         <option value="">-- Danh mục --</option>

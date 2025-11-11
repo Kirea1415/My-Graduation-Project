@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "name": "Game Keys",
+    "slug": "game-keys"
+  },
+  {
+    "id": 2,
+    "name": "Software Keys",
+    "slug": "software-keys"
+  },
+  {
+    "id": 4,
+    "name": "TEST",
+    "slug": "test"
+  }
+]

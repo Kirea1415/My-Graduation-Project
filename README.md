@@ -1,119 +1,235 @@
-SafeKeyS - Tài liệu dự án (Website hoàn chỉnh)
+# SafeKeyS - Hệ thống bán Key phần mềm và Game
 
-## 1) Tính năng tổng quan
-- Sản phẩm, danh mục, giỏ hàng, thanh toán giả lập, wishlist.
-- Lọc sản phẩm không tải lại trang (AJAX): sắp xếp, danh mục, khoảng giá, tìm kiếm, cập nhật URL không reload.
-- Trang Cài đặt Admin:
-  - Lưu từng phần (section) qua AJAX: `social`, `homepage`, `pages`.
-  - Quản lý nội dung trang chủ (hero title/subtitle/features, carousel title/subtitle).
-  - Mạng xã hội động: thêm/sửa/xóa, tên tuỳ ý, upload icon hình ảnh; không còn nhập URL icon.
-  - Footer đọc dữ liệu từ `social_media_list` (JSON) có fallback định dạng cũ nếu còn.
-- Xác thực: tài khoản thường + (tuỳ chọn) Google OAuth, bcrypt, session.
-- Upload file icon bằng multer, lưu tại `public/img/icons/` với kiểm tra loại/kích thước file.
+Hệ thống bán key phần mềm và game với đầy đủ tính năng quản lý, thanh toán MoMo, và quản lý dữ liệu.
 
-## 2) Công nghệ sử dụng
-- Node.js, Express, EJS.
-- SQLite (mặc định). Hỗ trợ xuất/đồng bộ sang PostgreSQL.
-- Passport (local, Google OAuth tuỳ chọn), bcrypt, express-session.
-- Multer (upload), CSRF, flash messages.
-- Frontend: EJS + CSS thuần, fetch API (AJAX).
+## 🚀 Tính năng chính
 
-## 3) Cài đặt & chạy
+- ✅ **Quản lý sản phẩm**: Thêm, sửa, xóa sản phẩm với danh mục
+- ✅ **Quản lý đơn hàng**: Xem lịch sử đơn hàng, quản lý trạng thái
+- ✅ **Thanh toán MoMo**: Tích hợp cổng thanh toán MoMo
+- ✅ **Giỏ hàng**: Lưu giỏ hàng vào database, không mất khi đăng xuất
+- ✅ **Quản lý người dùng**: Đăng ký, đăng nhập, hồ sơ cá nhân
+- ✅ **Yêu thích**: Danh sách sản phẩm yêu thích
+- ✅ **Tin tức**: Quản lý tin tức, bài viết
+- ✅ **Admin Panel**: Dashboard quản lý toàn diện
+- ✅ **Lưu trữ dữ liệu**: Dữ liệu được lưu vào file JSON trong `data/` và PostgreSQL
+
+## 📋 Yêu cầu hệ thống
+
+- Node.js >= 18.x
+- PostgreSQL >= 12.x
+- npm hoặc yarn
+
+## 🔧 Cài đặt
+
+### 1. Clone repository
+
+```bash
+git clone <repository-url>
+cd SafeKeyS
+```
+
+### 2. Cài đặt dependencies
+
 ```bash
 npm install
+```
+
+### 3. Cấu hình môi trường
+
+Tạo file `.env` trong thư mục gốc:
+
+```env
+# PostgreSQL
+PG_HOST=localhost
+PG_PORT=5432
+PG_DATABASE=safekeys
+PG_USER=postgres
+PG_PASSWORD=your_password
+
+# Session
+SESSION_SECRET=your-secret-key-change-this
+
+# MoMo Payment (optional)
+MOMO_ACCESS_KEY=your_momo_access_key
+MOMO_SECRET_KEY=your_momo_secret_key
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Server
+PORT=3000
+NODE_ENV=development
+```
+
+### 4. Tạo database
+
+```bash
+npm run create-db
+```
+
+Hoặc tạo thủ công:
+
+```sql
+CREATE DATABASE safekeys;
+```
+
+Sau đó import schema từ `data/safekeys-database.sql` (nếu có).
+
+### 5. Tạo bảng user_carts (cho tính năng lưu giỏ hàng)
+
+```bash
+npm run create-user-carts-table
+```
+
+### 6. Khởi động server
+
+**Development mode (với nodemon):**
+```bash
+npm run dev
+```
+
+**Production mode:**
+```bash
 npm start
-# hoặc
-node server.js
 ```
-Mặc định ứng dụng chạy tại: http://localhost:3000
 
-### Environment variables (tuỳ chọn)
-- PORT: cổng chạy server (mặc định 3000)
-- NODE_ENV: `development` | `production`
-- GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET (nếu bật Google OAuth)
-- SESSION_SECRET (khuyến nghị đặt riêng khi triển khai)
+Server sẽ chạy tại: `http://localhost:3000`
 
-## 4) Cấu trúc thư mục (rút gọn)
-- `server.js`: Routing, middleware, DB, auth, API AJAX, admin settings.
-- `views/`: Giao diện EJS
-  - `home.ejs`: Trang chủ, filter AJAX.
-  - `admin/settings.ejs`: Cài đặt admin, lưu từng phần, upload icon.
-- `public/`: Tài nguyên tĩnh
-  - `img/icons/`: Nơi lưu icon mạng xã hội upload.
+## 📁 Cấu trúc dữ liệu
 
-## 5) Cơ sở dữ liệu
-- Mặc định dùng SQLite (file `.db`).
-- File `.db` là cơ sở dữ liệu SQLite (toàn bộ bảng/dữ liệu). Mở bằng DBeaver, Beekeeper Studio, TablePlus, hoặc `sqlite3`.
+Dữ liệu được lưu trữ ở 2 nơi:
 
-### Truy vấn nhanh (sqlite3)
+### 1. PostgreSQL Database
+- Tất cả dữ liệu chính (users, products, orders, etc.)
+- Session data (giỏ hàng, đăng nhập)
+- User carts (giỏ hàng theo user_id)
+
+### 2. File JSON trong `data/`
+- `users.json` - Người dùng
+- `products.json` - Sản phẩm
+- `orders.json` - Đơn hàng
+- `order_items.json` - Chi tiết đơn hàng
+- `order_keys.json` - Keys của đơn hàng
+- `categories.json` - Danh mục
+- `wishlist.json` - Yêu thích
+- `news.json` - Tin tức
+- `settings.json` - Cài đặt
+
+**Lưu ý:** Dữ liệu được lưu tự động vào file JSON mỗi khi có thao tác. Bạn có thể mở file JSON để xem và quản lý dữ liệu trực tiếp.
+
+## 🔄 Scripts có sẵn
+
+### Quản lý database
 ```bash
-# Liệt kê bảng
-sqlite3 safekeys.db ".tables"
+# Tạo database và import schema
+npm run create-db
 
-# Truy vấn tất cả dữ liệu một bảng
-sqlite3 safekeys.db "SELECT * FROM products LIMIT 50;"
+# Tạo bảng user_carts (cho tính năng lưu giỏ hàng)
+npm run create-user-carts-table
 ```
 
-## 6) Bộ lọc sản phẩm (AJAX)
-- UI gọi `GET /api/products/filter` với các params: `q`, `sort`, `category`, `price`.
-- Server trả JSON `{ success, html, count }`, client cập nhật grid sản phẩm trực tiếp.
-- URL được cập nhật bằng `history.pushState` để hỗ trợ Back/Forward (có lắng nghe `popstate`).
-
-## 7) Cài đặt Admin (Admin Settings)
-- Endpoint lưu AJAX: `POST /admin/settings/save` với `section` thuộc một trong: `social`, `homepage`, `pages`.
-- Mạng xã hội:
-  - Dữ liệu lưu trong `social_media_list` (JSON array), mỗi item: `{ name, url, iconPath }`.
-  - Icon chỉ dùng upload file (bỏ trường URL icon). Tệp lưu `public/img/icons/`.
-- Trang chủ: các key `homepage_hero_title`, `homepage_hero_subtitle`, `homepage_hero_features`, `homepage_carousel_title`, `homepage_carousel_subtitle`.
-
-## 8) Xuất dữ liệu & chuyển đổi sang PostgreSQL
-- Dùng Node.js + `pg` để:
-  1) Tạo lược đồ (schema) tương đương trên PostgreSQL.
-  2) Đọc tất cả dữ liệu từ SQLite và insert sang PostgreSQL.
-  3) Tạo index/constraint; reset sequence nếu có.
-- Gợi ý kiểm tra khác biệt cú pháp giữa SQLite và PostgreSQL: AUTOINCREMENT ↔ SEQUENCE, datetime, upsert.
-- Sau khi import, có thể quản lý/quer y bằng pgAdmin.
-
-### Truy vấn tất cả dữ liệu (PostgreSQL, psql)
+### Đồng bộ dữ liệu
 ```bash
-# Ví dụ: liệt kê sản phẩm trên Postgres
-psql "$DATABASE_URL" -c "SELECT id, title, price_cents FROM products LIMIT 50;"
+# Đồng bộ từ PostgreSQL → File JSON
+npm run sync-to-files
+
+# Đồng bộ từ File JSON → PostgreSQL
+npm run sync-to-postgresql
 ```
 
-## 9) Bảo mật & xác thực
-- Session + CSRF được bật cho form POST (các API GET phục vụ AJAX filter không yêu cầu CSRF).
-- Mật khẩu băm bằng bcrypt.
-- (Tuỳ chọn) Google OAuth qua Passport (cần cấu hình client id/secret).
+### Chạy server
+```bash
+# Development mode (tự động restart khi có thay đổi)
+npm run dev
 
-## 10) Khắc phục sự cố
-- Không lưu được Cài đặt Admin: kiểm tra quyền ghi thư mục `public/img/icons/` và kích thước/định dạng ảnh.
-- Lọc không hoạt động: kiểm tra `GET /api/products/filter` trả về `200`; xem console trình duyệt và logs server.
-- Dropdown trống: kiểm tra bảng `categories` có dữ liệu; truy vấn danh mục nằm trong `server.js` (route `/`).
-- Upload icon thất bại: kiểm tra `multer` filter (định dạng) và limit kích thước.
+# Production mode
+npm start
+```
 
-## 11) Câu hỏi thường gặp (FAQ)
-- `.db` là gì và mở thế nào?
-  - Là file cơ sở dữ liệu SQLite. Mở bằng DBeaver, Beekeeper Studio, TablePlus, hoặc `sqlite3 safekeys.db`.
-- Có bắt buộc sửa tất cả cảnh báo linter không?
-  - Nên sửa để code rõ ràng, tránh lỗi tiềm ẩn. Dự án đã được tinh chỉnh để không còn báo lỗi nghiêm trọng ở phần Admin Settings.
-- Có thể triển khai production thế nào?
-  - Dùng `NODE_ENV=production`, reverse proxy (Nginx), và trình quản lý process như PM2. Đặt `SESSION_SECRET` riêng.
+## 🎯 Tính năng chi tiết
 
-## 12) Thư mục quan trọng
-- `server.js`: Routing, filter API, cài đặt, auth, giỏ hàng, wishlist, middleware.
-- `views/home.ejs`: Trang chủ + JS filter AJAX.
-- `views/admin/settings.ejs`: Giao diện cài đặt admin (lưu từng phần, upload icon).
-- `public/img/icons/`: Lưu icon mạng xã hội đã upload.
+### Giỏ hàng
+- Giỏ hàng được lưu vào PostgreSQL session store
+- Giỏ hàng được lưu vào database theo `user_id` khi logout
+- Giỏ hàng được restore khi login lại
+- Không mất giỏ hàng khi reload trang hoặc đăng xuất/đăng nhập
 
-## 13) Giấy phép
-Sử dụng nội bộ cho dự án SafeKeyS.
+### Thanh toán
+- **MoMo Payment**: Tích hợp cổng thanh toán MoMo
+- **Mock Payment**: Thanh toán thử nghiệm (không cần tiền thật)
+- Keys được lưu vào `order_keys` sau khi thanh toán thành công
 
-## Thư mục quan trọng
-- `server.js`: routing, filter API, cài đặt, auth, giỏ hàng, wishlist.
-- `views/home.ejs`: giao diện trang chủ, filters AJAX.
-- `views/admin/settings.ejs`: giao diện cài đặt admin, lưu từng phần qua AJAX, upload icon.
+### Quản lý Keys
+- Admin có thể quản lý keys cho từng sản phẩm
+- Keys được tự động gán cho đơn hàng sau khi thanh toán
+- Mỗi sản phẩm có thể có nhiều keys (theo số lượng)
 
-## Giấy phép
-Sử dụng nội bộ cho dự án SafeKeyS.
+### Admin Panel
+- Dashboard với thống kê
+- Quản lý sản phẩm, danh mục, tin tức
+- Quản lý đơn hàng và người dùng
+- Xem lịch sử giao dịch của người dùng
 
+## 🔐 Đăng nhập Admin
 
+- **URL**: `http://localhost:3000/admin`
+- **Mật khẩu dự phòng**: `141514` (cho tài khoản admin bị khóa)
+
+## 📝 API Endpoints
+
+### Cart
+- `POST /api/cart/add/:productId` - Thêm vào giỏ hàng (AJAX)
+- `POST /cart/add/:productId` - Thêm vào giỏ hàng
+- `POST /cart/remove/:productId` - Xóa khỏi giỏ hàng
+- `POST /cart/update/:productId` - Cập nhật số lượng
+
+### Checkout
+- `GET /checkout` - Trang xác nhận thanh toán
+- `POST /checkout` - Xử lý thanh toán
+- `POST /checkout/momo` - Thanh toán MoMo
+- `POST /api/momo-callback` - Callback từ MoMo
+
+### Orders
+- `GET /orders` - Lịch sử đơn hàng
+- `GET /orders/:id/keys` - Xem keys của đơn hàng
+
+## 🗄️ Database Schema
+
+### Bảng chính
+- `users` - Người dùng
+- `products` - Sản phẩm
+- `categories` - Danh mục
+- `orders` - Đơn hàng
+- `order_items` - Chi tiết đơn hàng
+- `order_keys` - Keys của đơn hàng
+- `wishlist` - Yêu thích
+- `news` - Tin tức
+- `settings` - Cài đặt
+- `sessions` - Session data (PostgreSQL session store)
+- `user_carts` - Giỏ hàng theo user_id
+
+## 🛠️ Troubleshooting
+
+### Lỗi kết nối PostgreSQL
+- Kiểm tra PostgreSQL service có đang chạy không
+- Kiểm tra thông tin trong file `.env`
+- Kiểm tra database `safekeys` đã được tạo chưa
+
+### Giỏ hàng bị mất
+- Đảm bảo đã chạy `npm run create-user-carts-table`
+- Kiểm tra session store có hoạt động không
+- Xem log trong console để debug
+
+### Dữ liệu không đồng bộ
+- Chạy `npm run sync-to-files` để đồng bộ từ PostgreSQL → File
+- Chạy `npm run sync-to-postgresql` để đồng bộ từ File → PostgreSQL
+
+## 📄 License
+
+ISC
+
+## 👥 Tác giả
+
+SafeKeyS Team

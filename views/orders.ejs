@@ -1,36 +1,87 @@
 <div class="orders-container">
-  <h1>📦 Đơn hàng của tôi</h1>
-  
-  <% if (!orders || orders.length === 0) { %>
-    <div class="empty-orders">
-      <div class="empty-icon">📭</div>
-      <h3>Bạn chưa có đơn hàng nào</h3>
-      <p class="muted">Bắt đầu mua sắm để có đơn hàng đầu tiên!</p>
-      <a href="/" class="btn primary">Khám phá sản phẩm</a>
+  <div class="orders-header">
+    <h1>💳 Lịch sử giao dịch</h1>
+    <p class="header-subtitle">Xem lại lịch sử mua hàng và key của bạn</p>
+  </div>
+
+  <!-- Password Verification Form -->
+  <% if (needsPasswordVerification) { %>
+    <div class="password-verification-section">
+      <div class="password-verification-box">
+        <div class="verification-header">
+          <div class="lock-icon">🔒</div>
+          <h2>Xác thực mật khẩu</h2>
+          <p class="verification-subtitle">Vui lòng nhập mật khẩu để xem lịch sử giao dịch và key của bạn</p>
+        </div>
+        
+        <% if (typeof flash !== 'undefined' && flash.error && flash.error.length) { %>
+          <div class="error-message">
+            <%= flash.error.join('<br/>') %>
+          </div>
+        <% } %>
+
+        <form method="POST" action="/orders/verify-password" class="verification-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-group">
+            <label for="password">Mật khẩu</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              autofocus
+              class="password-input"
+              placeholder="Nhập mật khẩu của bạn..."
+            />
+          </div>
+          <button type="submit" class="btn primary">Xác nhận</button>
+        </form>
+      </div>
     </div>
-  <% } else { %>
-    <div class="orders-grid">
+  <% } %>
+  
+  <!-- Only show orders if password is verified -->
+  <% if (!needsPasswordVerification) { %>
+    <% if (!orders || orders.length === 0) { %>
+      <div class="empty-orders">
+        <div class="empty-icon">📭</div>
+        <h3>Bạn chưa có giao dịch nào</h3>
+        <p class="muted">Bắt đầu mua sắm để có giao dịch đầu tiên!</p>
+        <a href="/" class="btn primary">Khám phá sản phẩm</a>
+      </div>
+    <% } else { %>
+      <div class="orders-grid">
       <% orders.forEach(o => { %>
         <div class="order-card">
           <div class="order-header">
             <div class="order-info">
-              <h3 class="order-number">Đơn hàng #<%= o.id %></h3>
+              <h3 class="order-number">Giao dịch #<%= o.id %></h3>
               <p class="order-date">
                 <span>📅</span>
-                <%= new Date(o.created_at).toLocaleString('vi-VN') %>
+                <strong><%= new Date(o.created_at).toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></strong>
+                <span style="margin: 0 8px;">•</span>
+                <span><%= new Date(o.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) %></span>
               </p>
             </div>
             <div class="order-status">
-              <% 
+              <%
                 const statusConfig = {
                   'pending': { label: 'Chờ xử lý', color: '#f59e0b', icon: '⏳' },
                   'processing': { label: 'Đang xử lý', color: '#3b82f6', icon: '⚙️' },
+                  'paid': { label: 'Đã thanh toán', color: '#10b981', icon: '✅' },
                   'completed': { label: 'Hoàn thành', color: '#10b981', icon: '✅' },
-                  'cancelled': { label: 'Đã hủy', color: '#ef4444', icon: '❌' }
+                  'cancelled': { label: 'Đã hủy', color: '#ef4444', icon: '❌' },
+                  'failed': { label: 'Thất bại', color: '#ef4444', icon: '❌' }
                 };
                 const status = statusConfig[o.status || 'pending'] || statusConfig['pending'];
+                const bgColor = status.color + '20';
+                const textColor = status.color;
+                const borderColor = status.color;
               %>
-              <span class="status-badge" style="background: <%= status.color %>20; color: <%= status.color %>; border: 1px solid <%= status.color %>">
+              <span class="status-badge" 
+                    data-bg-color="<%- bgColor %>" 
+                    data-text-color="<%- textColor %>" 
+                    data-border-color="<%- borderColor %>">
                 <span><%= status.icon %></span>
                 <%= status.label %>
               </span>
@@ -38,20 +89,78 @@
           </div>
           
           <div class="order-items">
-            <h4 class="items-title">Sản phẩm:</h4>
+            <h4 class="items-title">📦 Sản phẩm đã mua:</h4>
             <div class="items-list">
               <% (itemsByOrder[o.id] || []).forEach(it => { %>
                 <div class="order-item">
+                  <% if (it.image) { %>
+                    <div class="item-image">
+                      <img src="<%= it.image %>" alt="<%= it.title %>" />
+                    </div>
+                  <% } %>
                   <div class="item-info">
-                    <strong><%= it.title %></strong>
-                    <span class="item-meta">Số lượng: <%= it.quantity %> × <%= (it.price_cents/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
-                  </div>
-                  <div class="item-subtotal">
-                    <%= ((it.price_cents * it.quantity)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %>
+                    <strong class="item-title"><%= it.title %></strong>
+                    <div class="item-details">
+                      <span class="item-meta">Số lượng: <strong><%= it.quantity %></strong></span>
+                      <span class="item-meta">Giá: <strong><%= (it.price_cents/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></strong></span>
+                    </div>
+                    <div class="item-subtotal">
+                      Thành tiền: <strong><%= ((it.price_cents * it.quantity)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></strong>
+                    </div>
                   </div>
                 </div>
               <% }) %>
             </div>
+            
+            <!-- Show keys section only for paid/completed orders -->
+            <% const hasKeys = (itemsByOrder[o.id] || []).some(it => keysByOrderItem && keysByOrderItem[it.id] && keysByOrderItem[it.id].length > 0); %>
+            <% if (o.status === 'paid' || o.status === 'completed') { %>
+              <!-- Show keys if available -->
+              <% if (hasKeys) { %>
+              <div class="order-keys-section">
+                <div class="keys-section-header">
+                  <h5 class="keys-title"><%= keyDisplayTitle || '🔑 Key của bạn' %></h5>
+                  <a href="/orders/<%= o.id %>/keys" class="btn-view-keys" target="_blank">Xem chi tiết →</a>
+                </div>
+                <% if (keyDisplayMessage && (!currentUser || currentUser.role !== 'admin')) { %>
+                  <p class="keys-message"><%= keyDisplayMessage %></p>
+                <% } %>
+                
+                <div class="keys-list">
+                  <% (itemsByOrder[o.id] || []).forEach(it => { %>
+                    <% if (keysByOrderItem && keysByOrderItem[it.id] && keysByOrderItem[it.id].length > 0) { %>
+                      <% keysByOrderItem[it.id].forEach((keyValue, idx) => { %>
+                        <div class="key-item">
+                          <div class="key-content">
+                            <div class="key-label">🔑 Key <%= keysByOrderItem[it.id].length > 1 ? (idx + 1) : '' %>: <%= it.title %></div>
+                            <code class="key-value" data-key-value="<%= keyValue %>"><%= keyValue %></code>
+                          </div>
+                          <div class="key-actions">
+                            <button class="btn-copy-key" data-key-value="<%= keyValue %>" type="button" title="Sao chép key">
+                              <span class="btn-icon">📋</span>
+                              <span class="btn-text">Sao chép</span>
+                            </button>
+                          </div>
+                        </div>
+                      <% }) %>
+                    <% } %>
+                  <% }) %>
+                </div>
+                <div class="keys-note">
+                  <span class="note-icon">💡</span>
+                  <span>Bạn có thể sao chép key bằng cách nhấn nút "Sao chép" hoặc click vào key để chọn</span>
+                </div>
+              </div>
+              <% } else { %>
+                <!-- Order is paid/completed but no keys yet -->
+                <div class="order-keys-section">
+                  <div class="keys-empty">
+                    <span class="empty-icon">⏳</span>
+                    <p>Chưa có key cho sản phẩm này. Vui lòng liên hệ admin để được hỗ trợ.</p>
+                  </div>
+                </div>
+              <% } %>
+            <% } %>
           </div>
           
           <div class="order-footer">
@@ -61,29 +170,18 @@
             </div>
             
             <div class="order-actions">
-              <% if (o.status === 'pending' || o.status === 'processing') { %>
-                <form action="/orders/<%= o.id %>/cancel?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
-                  <button type="submit" class="btn danger small">❌ Hủy đơn</button>
-                </form>
-              <% } %>
-              <% if (currentUser && currentUser.role === 'admin') { %>
-                <form action="/admin/orders/<%= o.id %>/status?_csrf=<%= csrfToken %>" method="post" class="status-form">
-                  <select name="status" onchange="this.form.submit()" class="status-select">
-                    <option value="pending" <%= o.status === 'pending' ? 'selected' : '' %>>Chờ xử lý</option>
-                    <option value="processing" <%= o.status === 'processing' ? 'selected' : '' %>>Đang xử lý</option>
-                    <option value="completed" <%= o.status === 'completed' ? 'selected' : '' %>>Hoàn thành</option>
-                    <option value="cancelled" <%= o.status === 'cancelled' ? 'selected' : '' %>>Đã hủy</option>
-                  </select>
-                </form>
-                <form action="/admin/orders/<%= o.id %>/delete?_csrf=<%= csrfToken %>" method="post" onsubmit="return confirm('Xóa đơn hàng này?')">
-                  <button type="submit" class="btn danger small">🗑️ Xóa</button>
-                </form>
+              <% const hasKeysInOrder = (itemsByOrder[o.id] || []).some(it => keysByOrderItem && keysByOrderItem[it.id] && keysByOrderItem[it.id].length > 0); %>
+              <% if (hasKeysInOrder) { %>
+                <a href="/orders/<%= o.id %>/keys" class="btn primary small" target="_blank">
+                  🔑 Xem tất cả Key
+                </a>
               <% } %>
             </div>
           </div>
         </div>
       <% }) %>
-    </div>
+      </div>
+    <% } %>
   <% } %>
 </div>
 
@@ -91,6 +189,114 @@
 .orders-container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 20px;
+}
+
+.orders-header {
+  margin-bottom: 30px;
+}
+
+/* Password Verification Section */
+.password-verification-section {
+  margin-bottom: 30px;
+}
+
+.password-verification-box {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.verification-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.verification-header .lock-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.verification-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: var(--fg);
+}
+
+.verification-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.verification-form {
+  margin-top: 20px;
+}
+
+.verification-form .form-group {
+  margin-bottom: 20px;
+}
+
+.verification-form label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.verification-form .password-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 16px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.verification-form .password-input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.keys-locked {
+  padding: 20px;
+  text-align: center;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  color: #f59e0b;
+}
+
+.keys-locked .lock-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.keys-locked p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.orders-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  color: var(--fg);
+}
+
+.header-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
 }
 
 .empty-orders {
@@ -161,6 +367,9 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 20px;
+  background: var(--status-bg, transparent);
+  color: var(--status-color, inherit);
+  border: 1px solid var(--status-border, transparent);
   font-size: 12px;
   font-weight: 600;
 }
@@ -183,34 +392,66 @@
 
 .order-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border);
   border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.item-image {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .item-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
-.item-info strong {
+.item-title {
   color: var(--fg);
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.item-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .item-meta {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
+}
+
+.item-meta strong {
+  color: var(--fg);
+  font-weight: 600;
 }
 
 .item-subtotal {
   font-weight: 600;
   color: var(--green);
-  font-size: 14px;
+  font-size: 15px;
+  margin-top: 4px;
 }
 
 .order-footer {
@@ -279,6 +520,295 @@
   background: #dc2626;
 }
 
+.order-keys-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  border-radius: 8px;
+}
+
+.keys-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.keys-title {
+  margin: 0;
+  font-size: 16px;
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.btn-view-keys {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  color: var(--green);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-view-keys:hover {
+  background: var(--green);
+  color: white;
+}
+
+.keys-message {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.keys-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.key-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 2px solid rgba(22, 163, 74, 0.3);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.key-item:hover {
+  background: rgba(22, 163, 74, 0.15);
+  border-color: var(--green);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+.key-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.key-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.key-date {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.key-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.key-value {
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--green);
+  word-break: break-all;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  cursor: pointer;
+  user-select: all;
+  transition: all 0.2s;
+}
+
+.key-value:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: var(--green);
+}
+
+.btn-copy-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--green);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-copy-key:hover {
+  background: #16a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.btn-copy-key:active {
+  transform: translateY(0);
+}
+
+.btn-copy-key .btn-icon {
+  font-size: 16px;
+}
+
+.btn-copy-key .btn-text {
+  font-size: 14px;
+}
+
+.btn-delete-key {
+  padding: 8px 12px;
+  background: #ef4444;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-delete-key:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+.btn-delete-key:active {
+  transform: scale(0.95);
+}
+
+.keys-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.keys-empty .empty-icon {
+  font-size: 32px;
+}
+
+.keys-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.keys-pending {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.keys-pending-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  color: var(--muted);
+}
+
+.keys-pending-message .pending-icon {
+  font-size: 24px;
+}
+
+.keys-pending-message p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.keys-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.keys-note .note-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.admin-add-key {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.add-key-form {
+  margin: 0;
+}
+
+.add-key-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.add-key-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+}
+
+.add-key-input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.btn-add-key {
+  padding: 10px 16px;
+  background: var(--green);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-add-key:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+}
+
+.btn-add-key:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   .order-header {
     flex-direction: column;
@@ -299,7 +829,98 @@
   .order-actions .status-select {
     width: 100%;
   }
+  
+  .key-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .key-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .btn-copy-key,
+  .btn-delete-key {
+    flex: 1;
+  }
+  
+  .add-key-input-group {
+    flex-direction: column;
+  }
+  
+  .btn-add-key {
+    width: 100%;
+  }
 }
 </style>
+
+<script>
+// Apply dynamic styles to status badges
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.status-badge[data-bg-color]').forEach(function(badge) {
+    const bgColor = badge.getAttribute('data-bg-color');
+    const textColor = badge.getAttribute('data-text-color');
+    const borderColor = badge.getAttribute('data-border-color');
+    badge.style.setProperty('--status-bg', bgColor);
+    badge.style.setProperty('--status-color', textColor);
+    badge.style.setProperty('--status-border', borderColor);
+  });
+});
+
+// Copy key functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Copy button click
+  document.querySelectorAll('.btn-copy-key[data-key-value]').forEach(button => {
+    button.addEventListener('click', function() {
+      const keyValue = this.getAttribute('data-key-value');
+      copyKeyToClipboard(keyValue, this);
+    });
+  });
+
+  // Click on key value to select
+  document.querySelectorAll('.key-value[data-key-value]').forEach(keyElement => {
+    keyElement.addEventListener('click', function() {
+      const keyValue = this.getAttribute('data-key-value');
+      const range = document.createRange();
+      range.selectNodeContents(this);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+      // Try to copy
+      try {
+        document.execCommand('copy');
+        showCopySuccess(this);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    });
+  });
+});
+
+function copyKeyToClipboard(keyValue, button) {
+  navigator.clipboard.writeText(keyValue).then(() => {
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<span class="btn-icon">✅</span><span class="btn-text">Đã sao chép!</span>';
+    button.style.background = '#10b981';
+    setTimeout(() => {
+      button.innerHTML = originalHTML;
+      button.style.background = '';
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+    alert('Không thể sao chép. Vui lòng chọn và sao chép thủ công.');
+  });
+}
+
+function showCopySuccess(element) {
+  const originalBg = element.style.background;
+  element.style.background = 'rgba(22, 163, 74, 0.3)';
+  setTimeout(() => {
+    element.style.background = originalBg;
+  }, 1000);
+}
+</script>
 
 

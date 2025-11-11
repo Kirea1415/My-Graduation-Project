@@ -1,0 +1,438 @@
+<div class="admin-user-orders">
+  <div class="orders-header">
+    <div class="header-content">
+      <div>
+        <h1>📋 Lịch sử giao dịch</h1>
+        <p class="header-subtitle">Người dùng: <strong><%= user.name %></strong> (<%= user.email %>)</p>
+      </div>
+      <div class="header-actions">
+        <a href="/admin/users" class="btn-back">← Quay lại</a>
+      </div>
+    </div>
+  </div>
+
+  <% if (typeof flash !== 'undefined' && flash.success && flash.success.length) { %>
+    <div class="success-message">
+      <%= flash.success.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <% if (typeof flash !== 'undefined' && flash.error && flash.error.length) { %>
+    <div class="error-message">
+      <%= flash.error.join('<br/>') %>
+    </div>
+  <% } %>
+
+  <div class="user-info-card">
+    <div class="info-row">
+      <div class="info-item">
+        <span class="info-label">Tổng số đơn hàng:</span>
+        <span class="info-value"><%= orders.length %></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Tổng chi tiêu:</span>
+        <span class="info-value">
+          <%= ((orders.filter(o => o.status === 'paid' || o.status === 'completed').reduce((sum, o) => sum + (o.total_cents || 0), 0)) / 100).toLocaleString('vi-VN', {style:'currency',currency:'VND'}) %>
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Ngày đăng ký:</span>
+        <span class="info-value"><%= new Date(user.created_at).toLocaleDateString('vi-VN') %></span>
+      </div>
+    </div>
+  </div>
+
+  <% if (!orders || orders.length === 0) { %>
+    <div class="empty-orders">
+      <div class="empty-icon">📭</div>
+      <h3>Người dùng này chưa có giao dịch nào</h3>
+    </div>
+  <% } else { %>
+    <div class="orders-grid">
+      <% orders.forEach(o => { %>
+        <div class="order-card">
+          <div class="order-header">
+            <div class="order-info">
+              <h3 class="order-number">Giao dịch #<%= o.id %></h3>
+              <p class="order-date">
+                <span>📅</span>
+                <strong><%= new Date(o.created_at).toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></strong>
+                <span style="margin: 0 8px;">•</span>
+                <span><%= new Date(o.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) %></span>
+              </p>
+            </div>
+            <div class="order-status">
+              <%
+                const statusConfig = {
+                  'pending': { label: 'Chờ xử lý', color: '#f59e0b', icon: '⏳' },
+                  'processing': { label: 'Đang xử lý', color: '#3b82f6', icon: '⚙️' },
+                  'paid': { label: 'Đã thanh toán', color: '#10b981', icon: '✅' },
+                  'completed': { label: 'Hoàn thành', color: '#10b981', icon: '✅' },
+                  'cancelled': { label: 'Đã hủy', color: '#ef4444', icon: '❌' },
+                  'failed': { label: 'Thất bại', color: '#ef4444', icon: '❌' }
+                };
+                const status = statusConfig[o.status || 'pending'] || statusConfig['pending'];
+                const bgColor = status.color + '20';
+                const textColor = status.color;
+              %>
+              <span class="status-badge" 
+                    style="background-color: <%= bgColor %>; color: <%= textColor %>; border: 1px solid <%= textColor %>;">
+                <span><%= status.icon %></span>
+                <%= status.label %>
+              </span>
+            </div>
+          </div>
+          
+          <div class="order-items">
+            <h4 class="items-title">📦 Sản phẩm đã mua:</h4>
+            <div class="items-list">
+              <% (itemsByOrder[o.id] || []).forEach(it => { %>
+                <div class="order-item">
+                  <% if (it.image) { %>
+                    <div class="item-image">
+                      <img src="<%= it.image %>" alt="<%= it.title %>" />
+                    </div>
+                  <% } %>
+                  <div class="item-info">
+                    <strong class="item-title"><%= it.title %></strong>
+                    <div class="item-details">
+                      <span class="item-meta">Số lượng: <strong><%= it.quantity %></strong></span>
+                      <span class="item-meta">Giá: <strong><%= (it.price_cents/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></strong></span>
+                    </div>
+                    <div class="item-subtotal">
+                      Thành tiền: <strong><%= ((it.price_cents * it.quantity)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></strong>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+            
+            <!-- Show keys for paid/completed orders -->
+            <% if (o.status === 'paid' || o.status === 'completed') { %>
+              <% const hasKeys = (itemsByOrder[o.id] || []).some(it => keysByProduct && keysByProduct[it.product_id]); %>
+              <% if (hasKeys) { %>
+                <div class="order-keys-section">
+                  <h5 class="keys-title">🔑 Key của sản phẩm</h5>
+                  <div class="keys-list">
+                    <% (itemsByOrder[o.id] || []).forEach(it => { %>
+                      <% if (keysByProduct && keysByProduct[it.product_id]) { %>
+                        <div class="key-item">
+                          <div class="key-content">
+                            <div class="key-label">🔑 Key: <%= it.title %></div>
+                            <code class="key-value"><%= keysByProduct[it.product_id] %></code>
+                          </div>
+                        </div>
+                      <% } %>
+                    <% }) %>
+                  </div>
+                </div>
+              <% } %>
+            <% } %>
+          </div>
+          
+          <div class="order-footer">
+            <div class="order-total">
+              <strong>Tổng cộng:</strong>
+              <span class="total-price"><%= ((o.total_cents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
+            </div>
+            <div class="order-payment">
+              <span class="payment-method">Phương thức: <%= o.payment_method || '-' %></span>
+              <% if (o.payment_trans_id) { %>
+                <span class="payment-trans-id">Mã giao dịch: <%= o.payment_trans_id %></span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<style>
+.admin-user-orders {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.orders-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.orders-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  color: var(--fg);
+}
+
+.header-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.btn-back {
+  padding: 10px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.user-info-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.info-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.orders-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.order-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.order-number {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: var(--fg);
+}
+
+.order-date {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.order-items {
+  margin-bottom: 20px;
+}
+
+.items-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: var(--fg);
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+}
+
+.item-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-title {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fg);
+}
+
+.item-details {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.item-subtotal {
+  font-size: 14px;
+  color: var(--fg);
+}
+
+.order-keys-section {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(22, 163, 74, 0.05);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  border-radius: 8px;
+}
+
+.keys-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: var(--fg);
+}
+
+.keys-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.key-item {
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+
+.key-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.key-value {
+  display: block;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--fg);
+  word-break: break-all;
+}
+
+.order-footer {
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.total-price {
+  font-weight: 700;
+  color: var(--green);
+}
+
+.order-payment {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.empty-orders {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-orders h3 {
+  margin: 0;
+  color: var(--muted);
+}
+
+.success-message,
+.error-message {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.success-message {
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  color: #10b981;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+</style>
+
