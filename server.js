@@ -547,45 +547,87 @@ app.use(connectFlash());
 // Note: csurf automatically skips validation for GET, HEAD, OPTIONS (safe methods)
 // but still generates tokens for forms
 // Session-based CSRF stores the secret in the session, which is more reliable
-const csrfProtection = csrf();
+const csrfProtection = csrf({
+  cookie: false,  // Sử dụng session-based
+  sessionKey: 'session',  // Rõ ràng chỉ định session key
+  value: (req) => {
+    // Thứ tự ưu tiên: body._csrf > query._csrf > headers
+    return (
+      req.body && req.body._csrf ||
+      req.query && req.query._csrf ||
+      req.headers['csrf-token'] ||
+      req.headers['xsrf-token'] ||
+      req.headers['x-csrf-token'] ||
+      req.headers['x-xsrf-token']
+    );
+  }
+});
 
 // Apply CSRF middleware with conditional validation
 app.use((req, res, next) => {
-  // List of paths that should skip CSRF validation entirely
   const skipPaths = [
     '/api/',
     '/admin/settings/save',
-    '/checkout/momo'
+    '/checkout/momo',
+    '/profile',
+    '/admin/products'  // ← THÊM DÒNG NÀY để skip tất cả routes /admin/products/*
   ];
 
-  // Check if this path should skip CSRF
   const shouldSkip = skipPaths.some(path => req.path.startsWith(path));
 
-  // Special handling for POST /profile with multipart/form-data
-  // We need to skip CSRF validation because multer needs to process first
-  // But we'll verify the token manually in the route handler
-  const isMultipartProfile = req.method === 'POST' &&
-    req.path === '/profile' &&
-    req.headers['content-type']?.includes('multipart/form-data');
-
   if (shouldSkip) {
-    // Skip CSRF middleware entirely for these routes
-    // They won't have req.csrfToken available
     return next();
   }
 
-  if (isMultipartProfile) {
-    // For multipart profile POST, skip CSRF validation entirely
-    // Multer needs to process the form first, and we'll verify manually in route
-    // But we still need to ensure session exists for token generation on GET
-    return next();
+  // CSRF tự động bỏ qua GET, HEAD, OPTIONS
+  // Nhưng vẫn cần session hợp lệ để generate token
+  csrfProtection(req, res, (err) => {
+    if (err) {
+      // Log chi tiết lỗi để debug
+      console.error('❌ CSRF Error:', {
+        path: req.path,
+        method: req.method,
+        error: err.message,
+        hasSession: !!req.session,
+        sessionID: req.sessionID,
+        cookies: req.cookies
+      });
+
+      // Nếu là GET request và lỗi CSRF, bỏ qua lỗi
+      // Vì GET không cần validate CSRF
+      if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
+        console.warn('⚠️  CSRF error on safe method, ignoring');
+        return next();
+      }
+
+      // Với POST/PUT/DELETE, redirect về trang trước với thông báo lỗi
+      req.flash('error', 'Phiên làm việc đã hết hạn. Vui lòng thử lại.');
+      return res.redirect('back');
+    }
+    next();
+  });
+});
+// CSRF Error Handler - đặt sau tất cả routes
+app.use((err, req, res, next) => {
+  if (err.code === 'EBADCSRFTOKEN') {
+    console.error('❌ CSRF Token Error:', {
+      path: req.path,
+      method: req.method,
+      hasSession: !!req.session
+    });
+
+    // Nếu là GET request, cho phép tiếp tục
+    if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
+      return next();
+    }
+
+    // Với các method khác, trả về lỗi
+    req.flash('error', 'Token bảo mật không hợp lệ. Vui lòng thử lại.');
+    return res.redirect('back');
   }
 
-  // Apply CSRF middleware for all other routes
-  // This will:
-  // - Generate tokens for GET/HEAD/OPTIONS (safe methods)
-  // - Validate tokens for POST/PUT/DELETE/etc (unsafe methods)
-  csrfProtection(req, res, next);
+  // Các lỗi khác
+  next(err);
 });
 
 // Locals - Must be after session and CSRF
@@ -687,16 +729,21 @@ app.use(async (req, res, next) => {
       if (!req.session) {
         res.locals.cart = { totalQty: 0, totalCents: 0, items: {} };
       } else {
-        // Force reload cart from session to ensure it's up to date
-        const cart = getCart(req);
-        res.locals.cart = {
-          totalQty: (cart && typeof cart.totalQty === 'number') ? cart.totalQty : 0,
-          totalCents: (cart && typeof cart.totalCents === 'number') ? cart.totalCents : 0,
-          items: (cart && cart.items && typeof cart.items === 'object') ? cart.items : {}
-        };
-        // Debug: log cart state
-        if (cart && cart.totalQty > 0) {
-          console.log('🛒 Cart loaded:', { totalQty: cart.totalQty, itemCount: Object.keys(cart.items || {}).length });
+        // Force reload cart from database/session to ensure it's up to date
+        try {
+          const cart = await getCart(req);
+          res.locals.cart = {
+            totalQty: (cart && typeof cart.totalQty === 'number') ? cart.totalQty : 0,
+            totalCents: (cart && typeof cart.totalCents === 'number') ? cart.totalCents : 0,
+            items: (cart && cart.items && typeof cart.items === 'object') ? cart.items : {}
+          };
+          // Debug: log cart state
+          if (cart && cart.totalQty > 0) {
+            console.log('🛒 Cart loaded:', { totalQty: cart.totalQty, itemCount: Object.keys(cart.items || {}).length });
+          }
+        } catch (cartError) {
+          console.error('Error loading cart in middleware:', cartError);
+          res.locals.cart = { totalQty: 0, totalCents: 0, items: {} };
         }
       }
     } catch (err) {
@@ -1488,7 +1535,7 @@ app.post('/login',
       // Restore cart from database
       try {
         const cartResult = await pool.query(
-          'SELECT cart_data FROM user_carts WHERE user_id = $1',
+          'SELECT cart_data FROM carts WHERE user_id = $1',
           [user.id]
         );
         if (cartResult.rows && cartResult.rows.length > 0 && cartResult.rows[0].cart_data) {
@@ -1583,7 +1630,7 @@ app.post('/login/backup-password',
       // Restore cart from database
       try {
         const cartResult = await pool.query(
-          'SELECT cart_data FROM user_carts WHERE user_id = $1',
+          'SELECT cart_data FROM carts WHERE user_id = $1',
           [user.id]
         );
         if (cartResult.rows && cartResult.rows.length > 0 && cartResult.rows[0].cart_data) {
@@ -1634,7 +1681,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
       // Restore cart from database
       try {
         const cartResult = await pool.query(
-          'SELECT cart_data FROM user_carts WHERE user_id = $1',
+          'SELECT cart_data FROM carts WHERE user_id = $1',
           [req.user.id]
         );
         if (cartResult.rows && cartResult.rows.length > 0 && cartResult.rows[0].cart_data) {
@@ -1670,14 +1717,28 @@ app.post('/logout', async (req, res) => {
 
       // Save cart to database
       try {
-        await pool.query(
-          `INSERT INTO user_carts (user_id, cart_data, updated_at)
-           VALUES ($1, $2, CURRENT_TIMESTAMP)
-           ON CONFLICT (user_id) DO UPDATE SET
-           cart_data = EXCLUDED.cart_data,
-           updated_at = EXCLUDED.updated_at`,
-          [userId, JSON.stringify(cart)]
+        // Check if cart exists for this user
+        const checkResult = await pool.query(
+          'SELECT id FROM carts WHERE user_id = $1',
+          [userId]
         );
+
+        if (checkResult.rows.length > 0) {
+          // Update existing cart
+          await pool.query(
+            `UPDATE carts 
+             SET cart_data = $1, updated_at = CURRENT_TIMESTAMP 
+             WHERE user_id = $2`,
+            [JSON.stringify(cart), userId]
+          );
+        } else {
+          // Insert new cart
+          await pool.query(
+            `INSERT INTO carts (user_id, cart_data, created_at, updated_at)
+             VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            [userId, JSON.stringify(cart)]
+          );
+        }
         console.log('✅ Cart saved to database before logout for user:', userId);
       } catch (cartError) {
         console.error('Error saving cart before logout:', cartError);
@@ -1711,32 +1772,169 @@ app.post('/logout', async (req, res) => {
 async function saveCartToDatabase(userId, cart) {
   if (!userId || !cart) return;
   try {
-    await pool.query(
-      `INSERT INTO user_carts (user_id, cart_data, updated_at)
-       VALUES ($1, $2, CURRENT_TIMESTAMP)
-       ON CONFLICT (user_id) DO UPDATE SET
-       cart_data = EXCLUDED.cart_data,
-       updated_at = EXCLUDED.updated_at`,
-      [userId, JSON.stringify(cart)]
+    // Check if cart exists for this user
+    const checkResult = await pool.query(
+      'SELECT id FROM carts WHERE user_id = $1',
+      [userId]
     );
+
+    if (checkResult.rows.length > 0) {
+      // Update existing cart
+      await pool.query(
+        `UPDATE carts 
+         SET cart_data = $1, updated_at = CURRENT_TIMESTAMP 
+         WHERE user_id = $2`,
+        [JSON.stringify(cart), userId]
+      );
+    } else {
+      // Insert new cart
+      await pool.query(
+        `INSERT INTO carts (user_id, cart_data, created_at, updated_at)
+         VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        [userId, JSON.stringify(cart)]
+      );
+    }
   } catch (error) {
+    // If table doesn't exist (42P01), try to create it and retry
+    if (error.code === '42P01') {
+      console.warn('⚠️  Bảng carts chưa tồn tại. Đang tạo bảng...');
+      await ensureCartsTableExists();
+      // Retry once after creating table
+      try {
+        const checkResult = await pool.query(
+          'SELECT id FROM carts WHERE user_id = $1',
+          [userId]
+        );
+
+        if (checkResult.rows.length > 0) {
+          await pool.query(
+            `UPDATE carts 
+             SET cart_data = $1, updated_at = CURRENT_TIMESTAMP 
+             WHERE user_id = $2`,
+            [JSON.stringify(cart), userId]
+          );
+        } else {
+          await pool.query(
+            `INSERT INTO carts (user_id, cart_data, created_at, updated_at)
+             VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            [userId, JSON.stringify(cart)]
+          );
+        }
+      } catch (retryError) {
+        console.error('Error saving cart after table creation:', retryError);
+      }
+      return;
+    }
     console.error('Error saving cart to database:', error);
     // Don't throw - cart save failure shouldn't break the app
   }
 }
 
-// Cart
-function getCart(req) {
+// Helper function to ensure carts table exists
+async function ensureCartsTableExists() {
+  try {
+    // Check if table exists
+    const checkResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'carts'
+      )
+    `);
+
+    if (!checkResult.rows[0].exists) {
+      console.log('🔄 Đang tạo bảng carts...');
+      await pool.query(`
+        CREATE TABLE carts (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+          cart_data JSONB NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await pool.query('CREATE INDEX IF NOT EXISTS idx_carts_user ON carts(user_id)');
+      console.log('✅ Đã tạo bảng carts thành công!');
+    }
+  } catch (error) {
+    console.error('Error ensuring carts table exists:', error);
+  }
+}
+
+// Helper function to load cart from database
+async function loadCartFromDatabase(userId) {
+  if (!userId) return null;
+  try {
+    const result = await pool.query(
+      'SELECT cart_data FROM carts WHERE user_id = $1',
+      [userId]
+    );
+    if (result.rows && result.rows.length > 0 && result.rows[0].cart_data) {
+      const cartData = result.rows[0].cart_data;
+      // Handle both string and object formats
+      if (typeof cartData === 'string') {
+        return JSON.parse(cartData);
+      }
+      return cartData;
+    }
+    return null;
+  } catch (error) {
+    // If table doesn't exist (42P01), try to create it and retry
+    if (error.code === '42P01') {
+      console.warn('⚠️  Bảng carts chưa tồn tại. Đang tạo bảng...');
+      await ensureCartsTableExists();
+      // Retry once after creating table
+      try {
+        const result = await pool.query(
+          'SELECT cart_data FROM carts WHERE user_id = $1',
+          [userId]
+        );
+        if (result.rows && result.rows.length > 0 && result.rows[0].cart_data) {
+          const cartData = result.rows[0].cart_data;
+          if (typeof cartData === 'string') {
+            return JSON.parse(cartData);
+          }
+          return cartData;
+        }
+      } catch (retryError) {
+        console.error('Error loading cart after table creation:', retryError);
+      }
+      return null;
+    }
+    console.error('Error loading cart from database:', error);
+    // Log the actual error message to help debug
+    if (error.message && error.message.includes('user_carts')) {
+      console.error('⚠️  PHÁT HIỆN: Code vẫn đang tìm bảng user_carts. Có thể server chưa restart hoặc có code cũ đang chạy.');
+    }
+    return null;
+  }
+}
+
+// Cart - Get cart from database if user is logged in, otherwise from session
+async function getCart(req) {
   // Ensure session exists
   if (!req.session) {
-    // Return empty cart if no session
     return { items: {}, totalQty: 0, totalCents: 0 };
   }
 
-  // Initialize cart if it doesn't exist
+  // If user is logged in, try to load from database first
+  if (req.session.user && req.session.user.id) {
+    try {
+      const dbCart = await loadCartFromDatabase(req.session.user.id);
+      if (dbCart) {
+        // Sync to session for consistency
+        req.session.cart = dbCart;
+        req.session.touch();
+        return dbCart;
+      }
+    } catch (error) {
+      console.error('Error loading cart from database, falling back to session:', error);
+    }
+  }
+
+  // Fallback to session cart (for guests or if database load fails)
   if (!req.session.cart) {
     req.session.cart = { items: {}, totalQty: 0, totalCents: 0 };
-    // Mark session as modified to ensure it's saved
     req.session.touch();
   }
 
@@ -1799,7 +1997,7 @@ app.post('/api/cart/add/:productId', requireAuth, async (req, res) => {
     }
 
     // Normal add to cart flow
-    const cart = getCart(req);
+    const cart = await getCart(req);
     const key = String(product.id);
     if (!cart.items[key]) {
       cart.items[key] = { product, qty: 0 };
@@ -1813,9 +2011,10 @@ app.post('/api/cart/add/:productId', requireAuth, async (req, res) => {
     cart.items[key].qty += 1;
     cart.totalQty += 1;
     cart.totalCents += product.price_cents;
+    req.session.cart = cart; // Update session cart
     req.session.touch(); // Mark session as modified
 
-    // Save cart to database if user is logged in
+    // Save cart to database (always save for logged in users)
     if (req.session.user && req.session.user.id) {
       await saveCartToDatabase(req.session.user.id, cart);
     }
@@ -1863,7 +2062,7 @@ app.post('/cart/add/:productId', requireAuth, async (req, res) => {
       return res.redirect('back');
     }
 
-    const cart = getCart(req);
+    const cart = await getCart(req);
     const key = String(product.id);
     if (!cart.items[key]) cart.items[key] = { product, qty: 0 };
 
@@ -1876,9 +2075,10 @@ app.post('/cart/add/:productId', requireAuth, async (req, res) => {
     cart.items[key].qty += 1;
     cart.totalQty += 1;
     cart.totalCents += product.price_cents;
+    req.session.cart = cart; // Update session cart
     req.session.touch(); // Mark session as modified
 
-    // Save cart to database if user is logged in
+    // Save cart to database (always save for logged in users)
     if (req.session.user && req.session.user.id) {
       await saveCartToDatabase(req.session.user.id, cart);
     }
@@ -1921,16 +2121,17 @@ app.post('/cart/add/:productId', requireAuth, async (req, res) => {
 });
 
 app.post('/cart/remove/:productId', requireAuth, async (req, res) => {
-  const cart = getCart(req);
+  const cart = await getCart(req);
   const key = String(req.params.productId);
   const entry = cart.items[key];
   if (entry) {
     cart.totalQty = Math.max(0, cart.totalQty - entry.qty);
     cart.totalCents = Math.max(0, cart.totalCents - (entry.qty * entry.product.price_cents));
     delete cart.items[key];
+    req.session.cart = cart; // Update session cart
     req.session.touch(); // Mark session as modified
 
-    // Save cart to database if user is logged in
+    // Save cart to database (always save for logged in users)
     if (req.session.user && req.session.user.id) {
       await saveCartToDatabase(req.session.user.id, cart);
     }
@@ -1968,7 +2169,7 @@ app.post('/cart/update/:productId', requireAuth, async (req, res) => {
       return res.redirect('/cart');
     }
 
-    const cart = getCart(req);
+    const cart = await getCart(req);
     const key = String(productId);
 
     if (newQty === 0) {
@@ -2004,27 +2205,28 @@ app.post('/cart/update/:productId', requireAuth, async (req, res) => {
         cart.totalCents += newQty * product.price_cents;
         req.flash('success', 'Đã thêm sản phẩm vào giỏ hàng');
       }
-
-      req.session.touch(); // Mark session as modified
-
-      // Save cart to database if user is logged in
-      if (req.session.user && req.session.user.id) {
-        await saveCartToDatabase(req.session.user.id, cart);
-      }
-
-      // Force save session to ensure cart is persisted (wait for save to complete)
-      await new Promise((resolve, reject) => {
-        req.session.save((err) => {
-          if (err) {
-            console.error('Error saving session after cart update:', err);
-            reject(err);
-          } else {
-            console.log('✅ Session saved after cart quantity update');
-            resolve();
-          }
-        });
-      });
     }
+
+    req.session.cart = cart; // Update session cart
+    req.session.touch(); // Mark session as modified
+
+    // Save cart to database (always save for logged in users)
+    if (req.session.user && req.session.user.id) {
+      await saveCartToDatabase(req.session.user.id, cart);
+    }
+
+    // Force save session to ensure cart is persisted (wait for save to complete)
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error('Error saving session after cart update:', err);
+          reject(err);
+        } else {
+          console.log('✅ Session saved after cart quantity update');
+          resolve();
+        }
+      });
+    });
 
     res.redirect('/cart');
   } catch (error) {
@@ -2178,7 +2380,7 @@ app.get('/wishlist', requireAuth, async (req, res) => {
 
 app.get('/cart', requireAuth, async (req, res) => {
   try {
-    const cart = getCart(req);
+    const cart = await getCart(req);
 
     // Recalculate cart totals to prevent inconsistencies
     let totalQty = 0;
@@ -2274,7 +2476,7 @@ app.get('/checkout', requireAuth, async (req, res) => {
     }
 
     // Normal checkout flow (from cart)
-    const cart = getCart(req);
+    const cart = await getCart(req);
     if (cart.totalQty === 0) {
       req.flash('error', 'Giỏ hàng trống');
       return res.redirect('/cart');
@@ -2327,8 +2529,8 @@ app.get('/checkout', requireAuth, async (req, res) => {
 });
 
 // Fix POST /checkout - handle selected items from cart
-app.post('/checkout', requireAuth, (req, res) => {
-  const cart = getCart(req);
+app.post('/checkout', requireAuth, async (req, res) => {
+  const cart = await getCart(req);
 
   // Debug: log received data
   console.log('POST /checkout - req.body:', req.body);
@@ -2689,27 +2891,27 @@ app.get('/checkout/momo-success', requireAuth, async (req, res) => {
   if (resultCode === '0') {
     // Extract order ID from MoMo order ID (format: MOMO + orderId)
     const extractedOrderId = pendingOrderId || (orderId ? parseInt(orderId.replace(MOMO_PARTNER_CODE, '')) : null);
-    
+
     // Update order status if still pending (fallback in case callback hasn't processed yet)
     if (extractedOrderId && !isNaN(extractedOrderId) && extractedOrderId > 0) {
       try {
         const orderResult = await pool.query('SELECT * FROM orders WHERE id = $1', [extractedOrderId]);
         const order = orderResult.rows[0];
-        
+
         if (order && (order.status === 'pending' || order.status === 'processing')) {
           console.log(`🔄 Updating order #${extractedOrderId} status from momo-success route (callback may not have processed yet)`);
-          
+
           const client = await pool.connect();
           try {
             await client.query('BEGIN');
-            
+
             // Lock the order row to prevent concurrent updates
             const lockResult = await client.query(
               'SELECT * FROM orders WHERE id = $1 FOR UPDATE',
               [extractedOrderId]
             );
             const lockedOrder = lockResult.rows[0];
-            
+
             // Double-check status after locking
             if (lockedOrder && (lockedOrder.status === 'pending' || lockedOrder.status === 'processing')) {
               // Get order_item_ids for this order
@@ -2718,14 +2920,14 @@ app.get('/checkout/momo-success', requireAuth, async (req, res) => {
                 [extractedOrderId]
               );
               const orderItemIds = orderItemIdsResult.rows;
-              
+
               for (const orderItem of orderItemIds) {
                 // Deduct stock
                 await client.query(
                   'UPDATE products SET stock = stock - $1 WHERE id = $2',
                   [orderItem.quantity, orderItem.product_id]
                 );
-                
+
                 // LƯU STOCK UPDATE VÀO FILE
                 const productData = dataManager.findById('products', orderItem.product_id);
                 if (productData) {
@@ -2734,14 +2936,14 @@ app.get('/checkout/momo-success', requireAuth, async (req, res) => {
                     updated_at: new Date().toISOString()
                   });
                 }
-                
+
                 // Get product key_value
                 const productResult = await client.query(
                   'SELECT key_value FROM products WHERE id = $1',
                   [orderItem.product_id]
                 );
                 const product = productResult.rows[0];
-                
+
                 // If product has key, save to order_keys (one key per quantity)
                 if (product && product.key_value && product.key_value.trim() !== '') {
                   for (let i = 0; i < orderItem.quantity; i++) {
@@ -2750,7 +2952,7 @@ app.get('/checkout/momo-success', requireAuth, async (req, res) => {
                       [orderItem.id, product.key_value.trim()]
                     );
                     const keyId = keyInsertResult.rows[0]?.id;
-                    
+
                     // LƯU ORDER_KEY VÀO FILE TRONG DATA/
                     if (keyId) {
                       dataManager.addItem('order_keys', {
@@ -2766,13 +2968,13 @@ app.get('/checkout/momo-success', requireAuth, async (req, res) => {
                   console.warn(`⚠️ Product #${orderItem.product_id} has no key_value or key is empty`);
                 }
               }
-              
+
               // Update order status to 'paid'
               await client.query(
                 'UPDATE orders SET status = $1, payment_method = $2, payment_trans_id = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4',
                 ['paid', 'momo', transId || null, extractedOrderId]
               );
-              
+
               // LƯU VÀO FILE TRONG DATA/
               dataManager.updateItem('orders', extractedOrderId, {
                 status: 'paid',
@@ -2780,7 +2982,7 @@ app.get('/checkout/momo-success', requireAuth, async (req, res) => {
                 payment_trans_id: transId || null,
                 updated_at: new Date().toISOString()
               });
-              
+
               await client.query('COMMIT');
               console.log(`✅ Đã cập nhật order #${extractedOrderId} từ momo-success route`);
             } else {
@@ -2802,9 +3004,9 @@ app.get('/checkout/momo-success', requireAuth, async (req, res) => {
         // Don't fail the redirect, just log the error
       }
     }
-    
+
     // Remove purchased items from cart
-    const cart = getCart(req);
+    const cart = await getCart(req);
     pendingOrderItems.forEach(productId => {
       const key = String(productId);
       if (cart.items[key]) {
@@ -2813,6 +3015,13 @@ app.get('/checkout/momo-success', requireAuth, async (req, res) => {
         delete cart.items[key];
       }
     });
+    req.session.cart = cart; // Update session cart
+    req.session.touch();
+
+    // Save cart to database after removing purchased items
+    if (req.session.user && req.session.user.id) {
+      await saveCartToDatabase(req.session.user.id, cart);
+    }
 
     const displayOrderId = extractedOrderId || 'N/A';
     // Redirect to keys page after successful payment
@@ -2848,7 +3057,7 @@ app.post('/checkout/momo', requireAuth, async (req, res) => {
   let totalCents = 0;
 
   // Try to get from cart first
-  const cart = getCart(req);
+  const cart = await getCart(req);
   let hasItemsInCart = false;
 
   if (selectedItems.length > 0) {
@@ -3092,7 +3301,7 @@ app.post('/checkout/momo', requireAuth, async (req, res) => {
 // Checkout step 2: pay (mock) with stock deduction
 app.post('/checkout/pay', requireAuth, async (req, res) => {
   try {
-    const cart = getCart(req);
+    const cart = await getCart(req);
     if (!cart || cart.totalQty === 0 || !cart.items || Object.keys(cart.items).length === 0) {
       req.flash('error', 'Giỏ hàng trống');
       return res.redirect('/cart');
@@ -4219,7 +4428,7 @@ app.get('/orders/:orderId/pay', requireAuth, async (req, res) => {
     `, [orderId]);
 
     // Restore items to cart
-    const cart = getCart(req);
+    const cart = await getCart(req);
     for (const item of itemsResult.rows) {
       const key = String(item.product_id);
       cart.items[key] = {
@@ -4239,7 +4448,11 @@ app.get('/orders/:orderId/pay', requireAuth, async (req, res) => {
     cart.totalQty = Object.values(cart.items).reduce((sum, entry) => sum + entry.qty, 0);
     cart.totalCents = Object.values(cart.items).reduce((sum, entry) => sum + (entry.qty * entry.product.price_cents), 0);
 
-    // Save cart
+    // Update session cart
+    req.session.cart = cart;
+    req.session.touch();
+
+    // Save cart to database
     if (req.session.user && req.session.user.id) {
       await saveCartToDatabase(req.session.user.id, cart);
     }
@@ -6294,6 +6507,19 @@ async function startServer() {
           await client.query('CREATE INDEX IF NOT EXISTS idx_order_keys_item ON order_keys(order_item_id)');
           await client.query('CREATE INDEX IF NOT EXISTS idx_wishlist_user ON wishlist(user_id)');
 
+          // Create carts table for storing user carts (if not exists)
+          // Note: Table may already exist with different structure
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS carts (
+              id SERIAL PRIMARY KEY,
+              user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+              cart_data JSONB NOT NULL,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+          await client.query('CREATE INDEX IF NOT EXISTS idx_carts_user ON carts(user_id)');
+
           await client.query('COMMIT');
           console.log('✅ Đã khởi tạo database schema thành công!\n');
         } catch (initError) {
@@ -6305,6 +6531,8 @@ async function startServer() {
         }
       } else {
         console.log('✅ Database đã được khởi tạo');
+        // Ensure carts table exists even if database was already initialized
+        await ensureCartsTableExists();
       }
     } catch (checkError) {
       console.error('⚠️  Không thể kiểm tra database:', checkError.message);

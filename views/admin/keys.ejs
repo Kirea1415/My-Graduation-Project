@@ -1,3 +1,6 @@
+<!-- CSRF Token for AJAX requests -->
+<meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
+
 <div class="admin-keys-container">
   <div class="keys-header">
     <div class="header-content">
@@ -693,6 +696,8 @@ body > main > .container {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // CSRF token for AJAX requests - read from meta tag
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   // Copy key functionality
   document.querySelectorAll('.btn-copy[data-key-value]').forEach(button => {
     button.addEventListener('click', function() {
@@ -781,8 +786,9 @@ document.addEventListener('DOMContentLoaded', function() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
           },
-          body: JSON.stringify({ key_value: keyValue })
+          body: JSON.stringify({ key_value: keyValue, _csrf: csrfToken })
         });
 
         const data = await response.json();
@@ -891,7 +897,9 @@ document.addEventListener('DOMContentLoaded', function() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-          }
+            'X-CSRF-Token': csrfToken
+          },
+          body: JSON.stringify({ _csrf: csrfToken })
         });
 
         const data = await response.json();
