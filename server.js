@@ -34,6 +34,19 @@ const ICONS_PATH = path.join(PUBLIC_PATH, 'img', 'icons');
 if (!fs.existsSync(DATA_PATH)) fs.mkdirSync(DATA_PATH, { recursive: true });
 if (!fs.existsSync(ICONS_PATH)) fs.mkdirSync(ICONS_PATH, { recursive: true });
 
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const LOG_LEVEL = process.env.LOG_LEVEL || (NODE_ENV === 'production' ? 'info' : 'debug');
+const isDebugLoggingEnabled = LOG_LEVEL === 'debug';
+
+const logger = {
+  debug: (...args) => {
+    if (isDebugLoggingEnabled) console.debug(...args);
+  },
+  info: (...args) => console.info(...args),
+  warn: (...args) => console.warn(...args),
+  error: (...args) => console.error(...args)
+};
+
 // PostgreSQL connection pool
 const pgConfig = {
   host: process.env.PG_HOST || 'localhost',
@@ -47,7 +60,7 @@ const pgConfig = {
 };
 
 // Debug: Log config (without password)
-console.log('📋 PostgreSQL Config:', {
+logger.debug('📋 PostgreSQL Config:', {
   host: pgConfig.host,
   port: pgConfig.port,
   database: pgConfig.database,
@@ -739,7 +752,7 @@ app.use(async (req, res, next) => {
           };
           // Debug: log cart state
           if (cart && cart.totalQty > 0) {
-            console.log('🛒 Cart loaded:', { totalQty: cart.totalQty, itemCount: Object.keys(cart.items || {}).length });
+            logger.debug('🛒 Cart loaded:', { totalQty: cart.totalQty, itemCount: Object.keys(cart.items || {}).length });
           }
         } catch (cartError) {
           console.error('Error loading cart in middleware:', cartError);
@@ -2026,7 +2039,7 @@ app.post('/api/cart/add/:productId', requireAuth, async (req, res) => {
           console.error('Error saving session after cart update:', err);
           reject(err);
         } else {
-          console.log('✅ Session saved after cart update');
+          logger.debug('✅ Session saved after cart update');
           resolve();
         }
       });
@@ -2092,7 +2105,7 @@ app.post('/cart/add/:productId', requireAuth, async (req, res) => {
           console.error('Error saving session after cart add:', err);
           reject(err);
         } else {
-          console.log('✅ Session saved after cart add');
+          logger.debug('✅ Session saved after cart add');
           resolve();
         }
       });
@@ -2145,7 +2158,7 @@ app.post('/cart/remove/:productId', requireAuth, async (req, res) => {
           console.error('Error saving session after cart delete:', err);
           reject(err);
         } else {
-          console.log('✅ Session saved after cart delete');
+          logger.debug('✅ Session saved after cart delete');
           resolve();
         }
       });
@@ -2222,7 +2235,7 @@ app.post('/cart/update/:productId', requireAuth, async (req, res) => {
           console.error('Error saving session after cart update:', err);
           reject(err);
         } else {
-          console.log('✅ Session saved after cart quantity update');
+          logger.debug('✅ Session saved after cart quantity update');
           resolve();
         }
       });
@@ -2533,8 +2546,8 @@ app.post('/checkout', requireAuth, async (req, res) => {
   const cart = await getCart(req);
 
   // Debug: log received data
-  console.log('POST /checkout - req.body:', req.body);
-  console.log('POST /checkout - req.body.selected_items:', req.body.selected_items);
+  logger.debug('POST /checkout - req.body:', req.body);
+  logger.debug('POST /checkout - req.body.selected_items:', req.body.selected_items);
 
   // Handle selected_items - can be array or single value
   let selectedItems = [];
@@ -2544,7 +2557,7 @@ app.post('/checkout', requireAuth, async (req, res) => {
     selectedItems = [String(req.body.selected_items)];
   }
 
-  console.log('POST /checkout - parsed selectedItems:', selectedItems);
+  logger.debug('POST /checkout - parsed selectedItems:', selectedItems);
 
   if (selectedItems.length === 0) {
     req.flash('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán');
@@ -2553,7 +2566,7 @@ app.post('/checkout', requireAuth, async (req, res) => {
 
   // Store selected items in session for checkout
   req.session.selectedItems = selectedItems;
-  console.log('POST /checkout - stored in session:', req.session.selectedItems);
+  logger.debug('POST /checkout - stored in session:', req.session.selectedItems);
   res.redirect('/checkout');
 });
 
@@ -3462,7 +3475,7 @@ app.post('/checkout/pay', requireAuth, async (req, res) => {
           console.error('Error saving session after payment:', err);
           reject(err);
         } else {
-          console.log('✅ Session saved after payment');
+          logger.debug('✅ Session saved after payment');
           resolve();
         }
       });
@@ -3581,7 +3594,7 @@ app.post('/profile', requireAuth,
       }
 
       // Log multer processing result
-      console.log('🔍 Multer processing complete:', {
+      logger.debug('🔍 Multer processing complete:', {
         hasFile: !!req.file,
         fileInfo: req.file ? {
           fieldname: req.file.fieldname,
@@ -3627,12 +3640,12 @@ app.post('/profile', requireAuth,
       // For now, we rely on session authentication (requireAuth) and SameSite cookie
       // The token should be in the form from the GET request
       if (token) {
-        console.log('✅ CSRF token received in profile update');
+        logger.debug('✅ CSRF token received in profile update');
       } else {
         console.warn('⚠️ No CSRF token found in profile update (relying on session auth)');
       }
 
-      console.log('✅ Session verified, proceeding with profile update');
+      logger.debug('✅ Session verified, proceeding with profile update');
       next();
     });
   },
@@ -3640,8 +3653,8 @@ app.post('/profile', requireAuth,
   body('phone').optional({ checkFalsy: true }).trim().matches(/^[0-9]{10,11}$/).withMessage('Số điện thoại phải có 10-11 chữ số'),
   body('address').optional({ checkFalsy: true }).trim().isLength({ max: 500 }).withMessage('Địa chỉ tối đa 500 ký tự'),
   async (req, res) => {
-    console.log('🚀 Profile update handler started');
-    console.log('📋 Request details:', {
+    logger.debug('🚀 Profile update handler started');
+    logger.debug('📋 Request details:', {
       hasFile: !!req.file,
       fileField: req.file?.fieldname,
       bodyKeys: Object.keys(req.body || {}),
@@ -3681,7 +3694,7 @@ app.post('/profile', requireAuth,
       return res.redirect('/profile');
     }
 
-    console.log('✅ Validation passed');
+    logger.debug('✅ Validation passed');
 
     const { name, phone, address, originalPhone, originalAddress } = req.body;
     const userId = getUserId(req);
@@ -3828,7 +3841,7 @@ app.post('/profile', requireAuth,
               console.error('Error saving session after profile update:', err);
               reject(err);
             } else {
-              console.log('✅ Session saved after profile update');
+              logger.debug('✅ Session saved after profile update');
               resolve();
             }
           });

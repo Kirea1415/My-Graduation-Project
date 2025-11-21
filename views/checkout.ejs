@@ -27,7 +27,7 @@
       </div>
       
       <div class="checkout-section">
-        <h2>📧 Thông tin nhận key</h2>
+        <h2>Thông tin nhận key</h2>
         <p class="muted">Key sẽ được gửi qua email: <strong><%= currentUser.email %></strong></p>
         <p class="muted" style="font-size: 14px; margin-top: 8px;">
           💡 Vui lòng kiểm tra cả hộp thư spam nếu không thấy email trong vài phút.
@@ -35,10 +35,12 @@
       </div>
       
       <div class="checkout-section">
-        <h2>💳 Phương thức thanh toán</h2>
+        <h2>Phương thức thanh toán</h2>
         <div class="payment-methods">
           <div class="payment-method active" data-method="momo" onclick="selectPaymentMethod('momo')">
-            <span class="payment-icon">📱</span>
+            <span class="payment-icon">
+              <img src="/img/icons/momo_icon.png" alt="MoMo" width="32" height="32">
+            </span>
             <span>Ví điện tử MoMo</span>
             <span class="payment-badge">Thanh toán ngay</span>
           </div>
@@ -58,10 +60,6 @@
           <span><%= ((cart.totalCents || 0)/100).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></span>
         </div>
         
-        <div class="summary-row">
-          <span>Phí vận chuyển:</span>
-          <span style="color: #10b981;">Miễn phí</span>
-        </div>
         
         <div class="summary-row discount">
           <span>Khuyến mãi:</span>
@@ -76,7 +74,9 @@
         <form id="checkout-form" class="checkout-form">
           <input type="hidden" name="payment_method" id="payment-method" value="momo" />
           <button type="submit" class="btn primary large checkout-btn" id="checkout-btn" <%= (insufficient && insufficient.length) ? 'disabled' : '' %>>
-            <span id="checkout-icon">📱</span>
+            <span id="checkout-icon">
+              <img src="/img/icons/momo_icon.png" alt="MoMo" width="32" height="32">
+            </span>
             <span id="checkout-text">Thanh toán bằng MoMo</span>
           </button>
         </form>
