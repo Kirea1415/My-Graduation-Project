@@ -1,0 +1,24 @@
+<h1>Kích hoạt tài khoản</h1>
+
+<form id="sendForm" action="/send-activation?_csrf=<%= csrfToken %>" method="post" class="card" style="max-width:480px">
+  <div class="p">
+    <div style="margin-bottom:10px">
+      <label>Email</label>
+      <input name="email" type="email" required value="<%= typeof email !== 'undefined' ? email : '' %>" style="width:100%;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+    </div>
+    <button class="btn primary full" type="submit">Gửi mã kích hoạt</button>
+  </div>
+</form>
+
+<form id="verifyForm" action="/verify-activation?_csrf=<%= csrfToken %>" method="post" class="card" style="max-width:480px;margin-top:16px">
+  <div class="p">
+    <input type="hidden" name="email" value="<%= typeof email !== 'undefined' ? email : '' %>" />
+    <div style="margin-bottom:10px">
+      <label>Mã kích hoạt</label>
+      <input name="otp" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#0f172a;color:#fff" />
+    </div>
+    <button class="btn primary full" type="submit">Xác nhận</button>
+  </div>
+</form>
+
+<p style="margin-top:12px"><a href="/login">Quay về đăng nhập</a></p>

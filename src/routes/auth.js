@@ -5,6 +5,7 @@ import passport from 'passport';
 import { pool, db } from '../config/database.js';
 import { logger } from '../config/logger.js';
 import * as dataManager from '../../data/data-manager.js';
+import { sendOtp, verifyOtp } from '../services/otpService.js';
 
 const router = express.Router();
 
@@ -76,9 +77,10 @@ router.post('/register',
       }
       const password_hash = bcrypt.hashSync(password, 10);
       // Use RETURNING id for PostgreSQL
+      // Insert with activated = false so user must activate via OTP
       const result = await pool.query(
-        'INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id',
-        [name, email, password_hash, 'customer']
+        'INSERT INTO users (name, email, password_hash, role, activated) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+        [name, email, password_hash, 'customer', false]
       );
       const userId = result.rows[0]?.id;
       if (!userId) {
@@ -101,11 +103,10 @@ router.post('/register',
       };
       dataManager.addItem('users', newUser);
 
-      req.session.user = { id: userId, name, email, role: 'customer' };
-      // Initialize empty cart for new user
-      req.session.cart = { items: {}, totalQty: 0, totalCents: 0 };
-      req.flash('success', 'Đăng ký thành công');
-      res.redirect('/');
+      // Don't auto-login. Send activation OTP and redirect to activation page.
+      await sendOtp(email, 'Mã kích hoạt tài khoản');
+      req.flash('success', 'Đăng ký thành công. Vui lòng kiểm tra email để lấy mã kích hoạt.');
+      res.redirect(`/activate?email=${encodeURIComponent(email)}`);
     } catch (error) {
       logger.error('Register error:', error);
       req.flash('error', 'Có lỗi xảy ra khi đăng ký');
@@ -219,6 +220,16 @@ router.post('/login',
       loginAttempts.delete(normalizedEmail);
       delete req.session.adminLockedEmail;
       delete req.session.adminLockedUntil;
+      // If account exists but not activated, redirect user to activation page
+      if (user && (user.activated === false || user.activated === 0)) {
+        req.flash('error', 'Tài khoản chưa kích hoạt. Vui lòng kiểm tra email để lấy mã kích hoạt.');
+        return res.redirect(`/activate?email=${encodeURIComponent(normalizedEmail)}`);
+      }
+      // If account exists but not activated, redirect user to activation page
+      if (user && (user.activated === false || user.activated === 0)) {
+        req.flash('error', 'Tài khoản chưa kích hoạt. Vui lòng kiểm tra email để lấy mã kích hoạt.');
+        return res.redirect(`/activate?email=${encodeURIComponent(normalizedEmail)}`);
+      }
       req.session.user = { id: user.id, name: user.name, email: user.email, role: user.role };
 
       // Restore cart from database
@@ -396,6 +407,66 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
     }
   );
 }
+
+// GET /activate - render activation page
+router.get('/activate', (req, res) => {
+  const email = req.query.email || '';
+  res.render('auth/activate', { title: 'Kích hoạt tài khoản', email, csrfToken: req.csrfToken ? req.csrfToken() : '' });
+});
+
+// POST /send-activation - send activation OTP
+router.post('/send-activation', async (req, res) => {
+  try {
+    const email = (req.body.email || '').toLowerCase().trim();
+    if (!email) {
+      req.flash('error', 'Thiếu email');
+      return res.redirect('/activate');
+    }
+
+    // Check user exists
+    const stmt = db.prepare('SELECT * FROM users WHERE email = ?');
+    const user = await stmt.get(email);
+    if (!user) {
+      req.flash('error', 'Tài khoản không tồn tại');
+      return res.redirect('/activate');
+    }
+
+    await sendOtp(email, 'Mã kích hoạt tài khoản');
+    req.flash('success', 'Đã gửi mã kích hoạt đến email');
+    res.redirect(`/activate?email=${encodeURIComponent(email)}`);
+  } catch (err) {
+    logger.error('send-activation error:', err);
+    req.flash('error', 'Lỗi khi gửi mã kích hoạt');
+    res.redirect('/activate');
+  }
+});
+
+// POST /verify-activation - verify OTP and set activated=true
+router.post('/verify-activation', async (req, res) => {
+  try {
+    const email = (req.body.email || '').toLowerCase().trim();
+    const otp = req.body.otp;
+    if (!email || !otp) {
+      req.flash('error', 'Thiếu dữ liệu');
+      return res.redirect('/activate');
+    }
+
+    const result = verifyOtp(email, otp);
+    if (!result.success) {
+      req.flash('error', result.message || 'OTP không hợp lệ');
+      return res.redirect(`/activate?email=${encodeURIComponent(email)}`);
+    }
+
+    // Update DB to set activated true
+    await pool.query('UPDATE users SET activated = $1 WHERE email = $2', [true, email]);
+    req.flash('success', 'Kích hoạt thành công. Bạn có thể đăng nhập.');
+    res.redirect('/login');
+  } catch (err) {
+    logger.error('verify-activation error:', err);
+    req.flash('error', 'Lỗi khi xác nhận OTP');
+    res.redirect('/activate');
+  }
+});
 
 // POST /logout - Handle logout
 router.post('/logout', async (req, res) => {
