@@ -1,6 +1,7 @@
-<h1>Kích hoạt tài khoản</h1>
+<div class="auth-container">
+  <h1>Kích hoạt tài khoản</h1>
 
-<form id="sendForm" action="/send-activation?_csrf=<%= csrfToken %>" method="post" class="card" style="max-width:480px">
+  <form id="sendForm" action="/send-activation?_csrf=<%= csrfToken %>" method="post" class="card card-md">
   <div class="p">
     <div style="margin-bottom:10px">
       <label>Email</label>
@@ -8,9 +9,9 @@
     </div>
     <button class="btn primary full" type="submit">Gửi mã kích hoạt</button>
   </div>
-</form>
+  </form>
 
-<form id="verifyForm" action="/verify-activation?_csrf=<%= csrfToken %>" method="post" class="card" style="max-width:480px;margin-top:16px">
+<form id="verifyForm" action="/verify-activation?_csrf=<%= csrfToken %>" method="post" class="card card-md">
   <div class="p">
     <input type="hidden" name="email" value="<%= typeof email !== 'undefined' ? email : '' %>" />
     <div style="margin-bottom:10px">
@@ -19,6 +20,8 @@
     </div>
     <button class="btn primary full" type="submit">Xác nhận</button>
   </div>
-</form>
 
-<p style="margin-top:12px"><a href="/login">Quay về đăng nhập</a></p>
+  </form>
+
+  <p style="margin-top:12px"><a href="/login">Quay về đăng nhập</a></p>
+</div>

@@ -86,7 +86,7 @@
                 <span aria-hidden="true">❤️</span>
                 <span class="wishlist-text">Yêu thích</span>
               </a>
-                <a href="/orders" class="btn">Lịch sử giao dịch</a>
+                <a href="/orders" class="btn">Lịch sử mua hàng</a>
                 <a href="/profile" class="btn">Hồ sơ</a>
                 <form action="/logout?_csrf=<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn đăng xuất?')" style="margin:0">
                   <button class="btn">Đăng xuất</button>
@@ -129,7 +129,7 @@
                   <a href="/admin" class="btn admin">Admin</a>
                   <a href="/admin/products" class="btn admin">Sản phẩm</a>
                   <a href="/admin/categories" class="btn admin">Danh mục</a>
-                  <a href="/admin/orders" class="btn admin">Quản lý đơn hàng</a>
+                  <a href="/admin/orders" class="btn admin">Lịch sử giao dịch</a>
                   <a href="/admin/news" class="btn admin">Tin tức</a>
                   <a href="/admin/settings" class="btn admin">Cài đặt</a>
                 </div>

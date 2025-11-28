@@ -171,21 +171,38 @@ router.post('/login',
           const remainingMinutes = Math.ceil((attempt.lockedUntil - Date.now()) / 60000);
           const lockoutReason = attempt.reason || lockoutSettings.reason;
 
-          // If admin account is locked, set flag to show backup password form
-          if (user && user.role === 'admin') {
-            req.session.adminLockedEmail = normalizedEmail;
-            req.session.adminLockedUntil = attempt.lockedUntil;
-            req.flash('error', `${lockoutReason} Thời gian còn lại: ${remainingMinutes} phút.`);
-            req.flash('admin_locked', 'true'); // Flag to show backup password form
+          // Only show a lockout message when the account actually exists.
+          // For non-existent emails, don't reveal a lockout state — send a generic error instead.
+          if (user) {
+            // If admin account is locked, set flag to show backup password form
+            if (user.role === 'admin') {
+              req.session.adminLockedEmail = normalizedEmail;
+              req.session.adminLockedUntil = attempt.lockedUntil;
+              req.flash('error', `${lockoutReason} Thời gian còn lại: ${remainingMinutes} phút.`);
+              req.flash('admin_locked', 'true'); // Flag to show backup password form
+            } else {
+              req.flash('error', `${lockoutReason} Thời gian còn lại: ${remainingMinutes} phút.`);
+            }
           } else {
-            req.flash('error', `${lockoutReason} Thời gian còn lại: ${remainingMinutes} phút.`);
+            // Generic response for unknown accounts - do not leak lockout state
+            req.flash('error', 'Sai email hoặc mật khẩu.');
           }
+
           return res.redirect('/login');
         }
       }
 
       if (!isValid) {
-        // Increment failed attempts
+        // If the email doesn't exist at all, do not record lockout attempts
+        // or create a lock for non-existent accounts. This avoids locking
+        // arbitrary email addresses and leaking lockout state for emails
+        // that are not in our database.
+        if (!user) {
+          req.flash('error', 'Sai email hoặc mật khẩu.');
+          return res.redirect('/login');
+        }
+
+        // Increment failed attempts for an existing user
         const attempt = loginAttempts.get(normalizedEmail);
         if (!attempt) {
           loginAttempts.set(normalizedEmail, {
@@ -199,13 +216,21 @@ router.post('/login',
             attempt.lockedUntil = Date.now() + lockoutSettings.durationMs;
             attempt.reason = lockoutSettings.reason;
             const durationMinutes = Math.ceil(lockoutSettings.durationMs / 60000);
-            req.flash('error', `Bạn đã nhập sai ${lockoutSettings.maxAttempts} lần. ${lockoutSettings.reason} Thời gian khóa: ${durationMinutes} phút.`);
 
-            // If admin account, set flag to show backup password form
-            if (user && user.role === 'admin') {
-              req.session.adminLockedEmail = normalizedEmail;
-              req.session.adminLockedUntil = attempt.lockedUntil;
-              req.flash('admin_locked', 'true'); // Flag to show backup password form
+            // Only show account-locked details for existing users to avoid confusing
+            // users who are trying unknown / non-existent emails.
+            if (user) {
+              req.flash('error', `Bạn đã nhập sai ${lockoutSettings.maxAttempts} lần. ${lockoutSettings.reason} Thời gian khóa: ${durationMinutes} phút.`);
+
+              // If admin account, set flag to show backup password form
+              if (user.role === 'admin') {
+                req.session.adminLockedEmail = normalizedEmail;
+                req.session.adminLockedUntil = attempt.lockedUntil;
+                req.flash('admin_locked', 'true'); // Flag to show backup password form
+              }
+            } else {
+              // Generic response for unknown accounts
+              req.flash('error', 'Sai email hoặc mật khẩu.');
             }
           } else {
             const remaining = lockoutSettings.maxAttempts - attempt.count;

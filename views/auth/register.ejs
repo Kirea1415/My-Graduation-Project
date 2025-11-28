@@ -1,6 +1,6 @@
- 
-<h1>Đăng ký</h1>
-<form action="/register?_csrf=<%= csrfToken %>" method="post" class="card" style="max-width:420px">
+<div class="auth-container">
+  <h1>Đăng ký</h1>
+  <form action="/register?_csrf=<%= csrfToken %>" method="post" class="card card-sm">
   <div class="p">
     <div style="margin-bottom:10px">
       <label>Họ tên</label>
@@ -16,6 +16,7 @@
     </div>
     <button class="btn primary full" type="submit">Đăng ký</button>
   </div>
-</form>
+  </form>
+</div>
 
 

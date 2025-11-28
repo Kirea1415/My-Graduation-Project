@@ -31,7 +31,7 @@ html {
 
 body {
   margin: 0;
-  padding: 0;
+  padding: 0; 
   background: var(--bg);
   background-image: 
     radial-gradient(circle at 20% 50%, rgba(22, 163, 74, 0.03) 0%, transparent 50%),
@@ -655,6 +655,40 @@ main {
 
 .card .p {
   padding: 16px;
+}
+
+/* Centered small/auth pages (login / register / activation) */
+.auth-container {
+  max-width: 540px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+/* Small tweak for auth cards when placed inside auth-container */
+.auth-container .card {
+  padding: 32px;
+}
+
+.auth-container h1 {
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-size: 28px;
+  color: var(--fg);
+}
+
+/* small variations for commonly used auth card sizes */
+.card-sm { max-width: 420px; margin-left: auto; margin-right: auto; }
+.card-md { max-width: 480px; margin-left: auto; margin-right: auto; }
+.card-450 { max-width: 450px; margin-left: auto; margin-right: auto; }
+
+/* when multiple cards appear inside auth-container (stacked forms) */
+.auth-container .card + .card { margin-top: 16px; }
+
+/* Profile page wrapper to center the main profile layout */
+.profile-container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 20px;
 }
 
 .price {

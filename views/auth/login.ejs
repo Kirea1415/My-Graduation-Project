@@ -1,5 +1,5 @@
-<div class="login-container">
-  <div class="login-card">
+<div class="auth-container">
+  <div class="card card-450">
     <h1>Đăng nhập</h1>
     
     <% if (typeof flash !== 'undefined' && flash.error && flash.error.length) { %>
@@ -101,6 +101,7 @@
       
       <div class="login-footer">
         <p class="muted">Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
+        <p class="muted"><a href="/forgot-password">Quên mật khẩu?</a></p>
       </div>
     </div>
   </div>
@@ -115,25 +116,6 @@ function showNormalLogin() {
 </script>
 
 <style>
-.login-container {
-  max-width: 450px;
-  margin: 40px auto;
-  padding: 0 20px;
-}
-
-.login-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 40px;
-}
-
-.login-card h1 {
-  margin: 0 0 30px 0;
-  text-align: center;
-  font-size: 28px;
-  color: var(--fg);
-}
 
 /* Backup Password Section */
 .backup-password-section {
@@ -363,7 +345,7 @@ function showNormalLogin() {
 }
 
 @media (max-width: 768px) {
-  .login-card {
+  .auth-container .card {
     padding: 30px 20px;
   }
   

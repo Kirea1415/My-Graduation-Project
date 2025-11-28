@@ -1,6 +1,6 @@
 <div class="orders-container">
   <div class="orders-header">
-    <h1>Lịch sử giao dịch</h1>
+    <h1>Lịch sử mua hàng</h1>
     <p class="header-subtitle">Xem lại lịch sử mua hàng và key của bạn</p>
   </div>
 
@@ -147,7 +147,10 @@
                         <div class="key-item">
                           <div class="key-content">
                             <div class="key-label">🔑 Key <%= keysByOrderItem[it.id].length > 1 ? (idx + 1) : '' %>: <%= it.title %></div>
-                            <code class="key-value" data-key-value="<%= keyValue %>"><%= keyValue %></code>
+                            <div class="key-preview-wrapper">
+                              <code class="key-value collapsed" data-key-value="<%= keyValue %>"><%= (keyValue && keyValue.length) && keyValue.length > 28 ? keyValue.substring(0,28) + '...' : keyValue %></code>
+                              <button class="btn-toggle-key" type="button" aria-expanded="false" title="Hiển thị toàn bộ key">Hiện</button>
+                            </div>
                           </div>
                           <div class="key-actions">
                             <button class="btn-copy-key" data-key-value="<%= keyValue %>" type="button" title="Sao chép key">
@@ -305,7 +308,10 @@
                         <div class="key-item">
                           <div class="key-content">
                             <div class="key-label">🔑 Key <%= keysByOrderItem[it.id].length > 1 ? (idx + 1) : '' %>: <%= it.title %></div>
-                            <code class="key-value" data-key-value="<%= keyValue %>"><%= keyValue %></code>
+                            <div class="key-preview-wrapper">
+                              <code class="key-value collapsed" data-key-value="<%= keyValue %>"><%= (keyValue && keyValue.length) && keyValue.length > 28 ? keyValue.substring(0,28) + '...' : keyValue %></code>
+                              <button class="btn-toggle-key" type="button" aria-expanded="false" title="Hiển thị toàn bộ key">Hiện</button>
+                            </div>
                           </div>
                           <div class="key-actions">
                             <button class="btn-copy-key" data-key-value="<%= keyValue %>" type="button" title="Sao chép key">
@@ -879,6 +885,30 @@
   transition: all 0.2s;
 }
 
+.key-value.collapsed {
+  max-width: 380px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.key-preview-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-toggle-key {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  font-weight: 600;
+}
+
 .key-value:hover {
   background: rgba(0, 0, 0, 0.4);
   border-color: var(--green);
@@ -1139,6 +1169,27 @@ document.addEventListener('DOMContentLoaded', function() {
         showCopySuccess(this);
       } catch (err) {
         console.error('Failed to copy:', err);
+      }
+    });
+  });
+
+  // Toggle show/hide full key text
+  document.querySelectorAll('.btn-toggle-key').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const wrapper = this.closest('.key-preview-wrapper');
+      if (!wrapper) return;
+      const code = wrapper.querySelector('.key-value');
+      if (!code) return;
+
+      const expanded = this.getAttribute('aria-expanded') === 'true';
+      if (expanded) {
+        code.classList.add('collapsed');
+        this.setAttribute('aria-expanded', 'false');
+        this.textContent = 'Hiện';
+      } else {
+        code.classList.remove('collapsed');
+        this.setAttribute('aria-expanded', 'true');
+        this.textContent = 'Ẩn';
       }
     });
   });
